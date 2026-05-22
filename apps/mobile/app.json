@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "DailyNews",
+    "slug": "dailynews",
+    "scheme": "dailynews",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f5f5f7"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dailynews.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "사진 첨부에 필요합니다.",
+        "NSCameraUsageDescription": "사진 촬영에 필요합니다."
+      }
+    },
+    "android": {
+      "package": "com.dailynews.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#f5f5f7"
+      },
+      "permissions": ["READ_EXTERNAL_STORAGE", "POST_NOTIFICATIONS"]
+    },
+    "plugins": [
+      "expo-notifications",
+      "expo-document-picker",
+      "expo-image-picker"
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000/api/v1"
+    }
+  }
+}

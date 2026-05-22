@@ -1,0 +1,29 @@
+{
+  "name": "agentnews",
+  "private": true,
+  "version": "0.1.0",
+  "description": "agentNews — 위장 뉴스앱 + 비밀 1:1 채팅 SaaS (monorepo)",
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "backend:dev": "pnpm --filter @agentnews/backend dev",
+    "backend:build": "pnpm --filter @agentnews/backend build",
+    "backend:test": "pnpm --filter @agentnews/backend test",
+    "mobile:dev": "pnpm --filter @agentnews/mobile start",
+    "mobile:ios": "pnpm --filter @agentnews/mobile ios",
+    "mobile:android": "pnpm --filter @agentnews/mobile android",
+    "shared:build": "pnpm --filter @agentnews/shared build",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down",
+    "infra:logs": "docker compose -f infra/docker-compose.yml logs -f",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4",
+    "prettier": "3.3.3"
+  }
+}

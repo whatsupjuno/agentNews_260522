@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agentNews — Design Brief for Claude</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+header.hero {
+  background: linear-gradient(135deg, #1d1d1f 0%, #3a3a3c 100%);
+  color: #f5f5f7;
+  padding: 64px 48px;
+  border-radius: 24px;
+  margin-bottom: 48px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+header.hero h1 { font-size: 48px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 12px; }
+header.hero .subtitle { font-size: 20px; color: #a1a1a6; font-weight: 400; margin-bottom: 8px; }
+header.hero .meta { font-size: 13px; color: #86868b; margin-top: 24px; }
+header.hero .meta code { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-family: "SF Mono", Menlo, monospace; font-size: 12px; }
+
+section {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 40px 48px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  color: #1d1d1f;
+}
+section h2 .num { color: #007aff; font-weight: 600; margin-right: 8px; }
+section h3 { font-size: 20px; font-weight: 600; margin-top: 24px; margin-bottom: 12px; color: #1d1d1f; }
+section h4 { font-size: 16px; font-weight: 600; margin-top: 20px; margin-bottom: 8px; color: #1d1d1f; }
+section p { font-size: 16px; color: #424245; margin-bottom: 12px; }
+section ul, section ol { padding-left: 24px; margin-bottom: 12px; }
+section li { font-size: 16px; color: #424245; margin-bottom: 6px; }
+
+.usage {
+  background: #fff8e1;
+  border: 1px solid #ffd66b;
+}
+.usage h2 { color: #b35900; }
+
+.callout {
+  background: #f0f7ff;
+  border-left: 4px solid #007aff;
+  padding: 16px 20px;
+  margin: 16px 0;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #1d1d1f;
+}
+.callout strong { color: #007aff; }
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 16px 0;
+  font-size: 14px;
+}
+table th { background: #f5f5f7; padding: 10px 12px; text-align: left; font-weight: 600; color: #1d1d1f; font-size: 13px; }
+table td { padding: 10px 12px; border-top: 1px solid #e5e5ea; color: #424245; font-size: 14px; }
+table tr:hover td { background: #fafafa; }
+table code { background: #f5f5f7; padding: 1px 6px; border-radius: 4px; font-family: "SF Mono", Menlo, monospace; font-size: 12px; color: #1d1d1f; }
+
+.token-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0; }
+.token { background: #f5f5f7; padding: 16px; border-radius: 12px; }
+.token .label { font-size: 12px; color: #86868b; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.token .value { font-family: "SF Mono", Menlo, monospace; font-size: 13px; color: #1d1d1f; margin-top: 4px; }
+.token .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-right: 8px; border: 1px solid rgba(0,0,0,0.1); }
+
+.flow {
+  background: #f5f5f7;
+  padding: 24px;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+.flow .steps { counter-reset: step; }
+.flow .step {
+  position: relative;
+  padding-left: 48px;
+  margin-bottom: 16px;
+  counter-increment: step;
+}
+.flow .step::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  background: #007aff;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.prompt-block {
+  background: #1d1d1f;
+  color: #f5f5f7;
+  padding: 32px;
+  border-radius: 16px;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin: 16px 0;
+  position: relative;
+  overflow-x: auto;
+}
+.prompt-block::before {
+  content: "📋 복사해서 claude.ai 에 붙여넣기";
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 11px;
+  color: #86868b;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: rgba(255,255,255,0.05);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.tag {
+  display: inline-block;
+  background: #007aff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  margin-right: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tag.warn { background: #ff453a; }
+.tag.ok { background: #34c759; }
+.tag.warn-soft { background: #ff9500; }
+
+footer.foot {
+  text-align: center;
+  color: #86868b;
+  font-size: 13px;
+  padding: 32px 0;
+}
+footer.foot code { background: #fff; padding: 2px 8px; border-radius: 4px; font-family: "SF Mono", Menlo, monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="hero">
+  <h1>agentNews</h1>
+  <div class="subtitle">위장 뉴스앱 + 비밀 1:1 채팅 — Application Design Brief</div>
+  <div class="subtitle">for Claude (claude.ai / Anthropic Artifacts)</div>
+  <div class="meta">
+    출처: <code>~/WTF/agentic_system_test/.planning/tasks/PLAN-003/output/</code> · 22 산출물 / 7913 행 / 372 KB ·
+    생성: Humanless Planning System v0.2 (6 에이전트 병렬, 5h)
+  </div>
+</header>
+
+<!-- 사용 가이드 -->
+<section class="usage">
+  <h2><span class="num">§0</span> 사용 방법</h2>
+  <ol>
+    <li>이 페이지를 빠르게 훑어 §1~§7 로 컨셉/화면/플로우/디자인 토큰 파악</li>
+    <li><strong>§8 의 prompt block 을 통째로 복사</strong> → <a href="https://claude.ai" target="_blank">claude.ai</a> 새 대화에 붙여넣기</li>
+    <li>Claude 가 <strong>Artifacts 모드</strong>로 React/HTML/SVG 기반 high-fidelity mockup 생성</li>
+    <li>피드백 → Claude 가 갱신. <strong>"화면 4개 한 frame 에 보여줘"</strong>, <strong>"채팅 화면만 인터랙티브하게"</strong>, <strong>"위장 알림 push preview"</strong> 같은 후속 지시 자유</li>
+  </ol>
+  <div class="callout"><strong>핵심 위장 원칙</strong> — Claude 가 mockup 만들 때 *반드시 뉴스 앱처럼만 보이게*. URL bar / 스크린 이름 / 메뉴 아이콘 어디에도 "chat", "secret", "message" 단어 노출 금지. 채팅 화면도 "기사 상세" 처럼 위장된 layout 유지.</div>
+</section>
+
+<!-- §1 컨셉 -->
+<section>
+  <h2><span class="num">§1</span> 한 줄 컨셉</h2>
+  <p style="font-size: 18px; font-weight: 500;">겉으로는 일반 뉴스 앱처럼 보이지만, 특정 순서로 기사를 탭하면 비밀 1:1 채팅 모드로 진입하는 친구들끼리의 "비밀요원 놀이" 용 위장 SaaS.</p>
+  <ul>
+    <li><strong>위장 진입</strong>: 메인 피드의 1·3·5·7번 기사를 <code>5 → 3 → 1 → 7</code> 순으로 탭 → 채팅 모드 전환</li>
+    <li><strong>위장 알림</strong>: 메시지 도착 시 <code>"📰 새 뉴스 — '00 정상회담 합의 도출'"</code> 형식 푸시</li>
+    <li><strong>위장 라우트</strong>: RN React Navigation Stack — URL bar 없음. 채팅 화면도 <code>ArticleDetailScreen</code> 내부 conditional swap</li>
+    <li><strong>첨부</strong>: 사진/PDF — OS sharesheet 직접 호출</li>
+  </ul>
+</section>
+
+<!-- §2 사용자 -->
+<section>
+  <h2><span class="num">§2</span> 사용자 유형 (1종)</h2>
+  <p>유일 사용자 = <strong>agent (회원)</strong>. 이메일+비밀번호로 가입한 사용자. 페어링은 <strong>사용자 ID 검색 → 페어링 요청 → 상대 수락</strong> 모델 (admin 사전 설정 아님).</p>
+</section>
+
+<!-- §3 화면 -->
+<section>
+  <h2><span class="num">§3</span> 화면 인벤토리 (13개)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>화면명</th><th>RN Screen</th><th>접근 권한</th><th>주요 액션</th></tr></thead>
+    <tbody>
+      <tr><td>SCR-001</td><td>로그인</td><td><code>LoginScreen</code></td><td>미인증</td><td>로그인, 회원가입 이동</td></tr>
+      <tr><td>SCR-002</td><td>회원가입</td><td><code>RegisterScreen</code></td><td>미인증</td><td>회원가입</td></tr>
+      <tr><td>SCR-003</td><td>시퀀스 reset</td><td><code>SequenceResetScreen</code></td><td>딥링크</td><td>새 시퀀스 등록</td></tr>
+      <tr><td>SCR-010</td><td>뉴스 피드</td><td><code>NewsFeedScreen</code></td><td>agent</td><td>피드, 기사 탭, 새로고침</td></tr>
+      <tr><td>SCR-011</td><td>기사 상세</td><td><code>ArticleDetailScreen</code></td><td>agent</td><td>기사 조회, 시퀀스 unlock 시도</td></tr>
+      <tr><td>SCR-020</td><td>채팅 (위장)</td><td><code>ArticleDetailScreen</code> swap</td><td>agent + unlock 유효 + PAIRED</td><td>채팅 송수신, 첨부, 페어</td></tr>
+      <tr><td>SCR-021</td><td>페어 검색</td><td><code>PairingSearchScreen</code></td><td>agent + unlock</td><td>사용자 조회, 페어링 요청</td></tr>
+      <tr><td>SCR-022</td><td>페어링 확인</td><td><code>PairingRequestScreen</code></td><td>agent + unlock</td><td>수락·거부·취소</td></tr>
+      <tr><td>SCR-030</td><td>설정</td><td><code>SettingsScreen</code></td><td>agent</td><td>프로필, 로그아웃, 위장 테스트</td></tr>
+      <tr><td>SCR-031</td><td>프로필 편집</td><td><code>ProfileEditScreen</code></td><td>agent</td><td>닉네임 변경, 탈퇴</td></tr>
+      <tr><td>SCR-032</td><td>시퀀스 변경</td><td><code>SequenceChangeScreen</code></td><td>agent</td><td>시퀀스 변경</td></tr>
+      <tr><td>SCR-033</td><td>시퀀스 reset 요청</td><td><code>SequenceResetRequestScreen</code></td><td>agent</td><td>reset 링크 발송</td></tr>
+      <tr><td>SCR-034</td><td>페어 해제 확인</td><td><code>PairDisconnectScreen</code></td><td>agent (PAIRED)</td><td>페어 해제</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- §4 핵심 User Flow -->
+<section>
+  <h2><span class="num">§4</span> 핵심 User Flow (3개)</h2>
+
+  <h3>Flow 1 — 위장 진입 (SCN-002 Happy)</h3>
+  <div class="flow"><div class="steps">
+    <div class="step"><strong>SCR-010 메인 피드</strong> 진입. 일반 뉴스 카드 N개 보임 (Apple News 스타일)</div>
+    <div class="step">사용자가 5번째 기사 탭 → <code>SCR-011 ArticleDetailScreen</code> (일반 모드)</div>
+    <div class="step">뒤로 → 3번째 → 1번째 → 7번째 기사 차례 탭</div>
+    <div class="step">4번째 정탑 (7번 기사) 완료 시 unlock_token 발급. 화면이 *같은 ArticleDetailScreen 내부* 에서 <strong>채팅 모드로 conditional swap</strong></div>
+    <div class="step"><strong>SCR-020 채팅</strong> — 페어와 1:1 대화 시작 (말풍선 UI, Apple Messages 스타일)</div>
+  </div></div>
+
+  <h3>Flow 2 — 위장 알림 tap (SCN-002 Push)</h3>
+  <div class="flow"><div class="steps">
+    <div class="step">페어가 메시지 보냄 → 백엔드 worker 가 위장 헤드라인 생성</div>
+    <div class="step">사용자 폰에 푸시: <code>📰 새 뉴스 — "AI 모델 공개 — 안전성 논쟁 가열" / 연합뉴스 3분 전</code> 형식. <strong>data payload 0, notification payload only</strong></div>
+    <div class="step">사용자가 알림 tap → 앱 열림 (cold start 시 <code>messaging().getInitialNotification()</code>)</div>
+    <div class="step">→ <strong>SCR-010 메인 피드</strong> 진입 (위장 유지). 자동으로 채팅 화면 이동 X</div>
+    <div class="step">사용자가 별도로 5-3-1-7 시퀀스 입력해야 실제 메시지 확인</div>
+  </div></div>
+
+  <h3>Flow 3 — 첨부 전송 (SCN-006)</h3>
+  <div class="flow"><div class="steps">
+    <div class="step">SCR-020 채팅 모드. 첨부 아이콘 탭 → OS sharesheet (<code>react-native-image-picker</code> / <code>react-native-document-picker</code>)</div>
+    <div class="step">사용자가 사진 또는 PDF 선택. 클라이언트가 <code>POST /api/v1/attachments</code> (multipart, status=UPLOADING)</div>
+    <div class="step">서버: MIME + 매직바이트 3중 검증 → status=AVAILABLE</div>
+    <div class="step">사용자가 메시지 본문 + 첨부 함께 전송 → 메시지 버블에 inline 미리보기 (이미지 thumbnail / PDF 아이콘)</div>
+    <div class="step">페어가 받음 → 위장 푸시 → 시퀀스 후 채팅 → 첨부 탭 → OS 기본 뷰어</div>
+  </div></div>
+</section>
+
+<!-- §5 디자인 토큰 -->
+<section>
+  <h2><span class="num">§5</span> 디자인 토큰 (Apple HIG iOS 17 풍)</h2>
+  <p>Apple News + Apple Messages 의 시각 언어 결합. SF Pro Display / Text, 시스템 컬러, 8pt grid.</p>
+
+  <h3>Colors (Light Mode)</h3>
+  <div class="token-grid">
+    <div class="token"><div class="label">Background</div><div class="value"><span class="swatch" style="background:#f5f5f7"></span>#f5f5f7</div></div>
+    <div class="token"><div class="label">Surface (Card)</div><div class="value"><span class="swatch" style="background:#ffffff"></span>#ffffff</div></div>
+    <div class="token"><div class="label">Text Primary</div><div class="value"><span class="swatch" style="background:#1d1d1f"></span>#1d1d1f</div></div>
+    <div class="token"><div class="label">Text Secondary</div><div class="value"><span class="swatch" style="background:#86868b"></span>#86868b</div></div>
+    <div class="token"><div class="label">Accent (Blue)</div><div class="value"><span class="swatch" style="background:#007aff"></span>#007aff iOS system blue</div></div>
+    <div class="token"><div class="label">Success</div><div class="value"><span class="swatch" style="background:#34c759"></span>#34c759 system green</div></div>
+    <div class="token"><div class="label">Warning</div><div class="value"><span class="swatch" style="background:#ff9500"></span>#ff9500 system orange</div></div>
+    <div class="token"><div class="label">Danger</div><div class="value"><span class="swatch" style="background:#ff453a"></span>#ff453a system red</div></div>
+    <div class="token"><div class="label">Message Bubble (me)</div><div class="value"><span class="swatch" style="background:#007aff"></span>#007aff (iMessage 풍)</div></div>
+    <div class="token"><div class="label">Message Bubble (peer)</div><div class="value"><span class="swatch" style="background:#e9e9eb"></span>#e9e9eb</div></div>
+  </div>
+
+  <h3>Typography</h3>
+  <div class="token-grid">
+    <div class="token"><div class="label">Font Family</div><div class="value">SF Pro Display (display) / SF Pro Text (body)</div></div>
+    <div class="token"><div class="label">News Title</div><div class="value">22 / 700 / -0.4 tracking</div></div>
+    <div class="token"><div class="label">News Summary</div><div class="value">15 / 400 / 1.4 line-height</div></div>
+    <div class="token"><div class="label">Source / Time</div><div class="value">12 / 500 / uppercase 0.04em</div></div>
+    <div class="token"><div class="label">Chat Message</div><div class="value">17 / 400 / 1.3</div></div>
+    <div class="token"><div class="label">Settings Row</div><div class="value">17 / 400</div></div>
+  </div>
+
+  <h3>Spacing / Radius / Shadow</h3>
+  <div class="token-grid">
+    <div class="token"><div class="label">Spacing scale</div><div class="value">4 / 8 / 12 / 16 / 20 / 24 / 32 / 48</div></div>
+    <div class="token"><div class="label">Card radius</div><div class="value">12</div></div>
+    <div class="token"><div class="label">Modal radius</div><div class="value">18</div></div>
+    <div class="token"><div class="label">Message bubble radius</div><div class="value">22 (corner) + 4 (tail)</div></div>
+    <div class="token"><div class="label">News card shadow</div><div class="value">0 1px 3px rgba(0,0,0,.08)</div></div>
+    <div class="token"><div class="label">Modal shadow</div><div class="value">0 12px 36px rgba(0,0,0,.18)</div></div>
+  </div>
+</section>
+
+<!-- §6 핵심 컴포넌트 -->
+<section>
+  <h2><span class="num">§6</span> 핵심 컴포넌트</h2>
+  <ul>
+    <li><strong>NewsCard</strong> — 썸네일 (16:9, radius 12) + 제목 + 출처+시간 + 요약 일부. 첫 카드는 hero (큰 이미지). Apple News 풍</li>
+    <li><strong>NewsFeedList</strong> — 무한 스크롤. Pull-to-refresh. 카드 사이 12pt</li>
+    <li><strong>ArticleDetailHeader</strong> — 큰 이미지 hero + 제목 + 출처 + 발행 시각 + "원문 보기" 버튼. 일반 모드는 여기까지</li>
+    <li><strong>ChatSwap</strong> — 같은 ArticleDetailScreen 안에서 unlock_token + PAIRED 시 자동 swap. 위에서부터 채팅 메시지 리스트로</li>
+    <li><strong>MessageBubble</strong> — 좌측 peer (회색 #e9e9eb), 우측 me (파랑 #007aff + 흰 글씨). Apple Messages 풍 corner radius 22. 1분 이내 같은 sender 면 grouping</li>
+    <li><strong>AttachmentPreview</strong> — 이미지: 200×200 cap, radius 12. PDF: 아이콘 + 파일명 + 크기</li>
+    <li><strong>ChatInputBar</strong> — 하단 sticky. 입력 textarea + 첨부 아이콘 + 전송 버튼 (paper plane). 잠금 아이콘 (헤더 우측)</li>
+    <li><strong>PairingSearchInput</strong> — 검색창 + 결과 목록 (아바타 + 닉네임 + ID). 페어링 요청 버튼</li>
+    <li><strong>SettingsRow</strong> — Apple Settings 스타일. 아이콘 + 라벨 + chevron / toggle / value</li>
+    <li><strong>SequenceTrigger (invisible)</strong> — NewsCard 가 받음. tap order 추적은 클라이언트 state. UI 노출 0</li>
+    <li><strong>PushNotificationPreview</strong> — mockup 용 위장 알림 (iOS / Android notification banner). title "📰 새 뉴스 — &lt;헤드라인&gt;" / subtitle "&lt;출처&gt; · &lt;시각&gt;". data payload 표기 0</li>
+  </ul>
+</section>
+
+<!-- §7 위장 강화 가이드라인 -->
+<section>
+  <h2><span class="num">§7</span> 위장 강화 가이드라인 (시각 디자인 단계 enforce)</h2>
+  <ul>
+    <li><span class="tag warn">CRITICAL</span> 앱 이름: <code>agentNews</code> 가 아니라 <strong>"DailyNews" / "오늘의뉴스"</strong> 같은 평범한 뉴스 앱 이름. 앱 아이콘도 신문/N 로고</li>
+    <li><span class="tag warn">CRITICAL</span> 번들 ID: <code>com.dailynews.app</code> (chat/secret/agent 단어 0)</li>
+    <li><span class="tag warn">CRITICAL</span> 스크린 이름: <code>ChatScreen</code> 같은 직접 명명 금지. <code>ArticleDetailScreen</code> 내부 swap 패턴</li>
+    <li><span class="tag warn-soft">HIGH</span> Notification Center preview: 잠금화면에서 헤드라인만 노출. <code>data</code> payload 0</li>
+    <li><span class="tag warn-soft">HIGH</span> App Switcher preview: 백그라운드 전환 시 채팅 화면 → 일반 뉴스 화면으로 swap (애니메이션 없이)</li>
+    <li><span class="tag warn-soft">HIGH</span> 스크린샷 차단: Android <code>FLAG_SECURE</code>, iOS 의 경우 OS 차단 불가 → 채팅 모드에서 사용자가 home button 누를 때 화면 blur 처리</li>
+    <li><span class="tag warn-soft">HIGH</span> iOS Spotlight / Siri Suggest: 메시지 내용 색인 비활성</li>
+    <li><span class="tag ok">OK</span> 채팅 화면 헤더: 페어 닉네임 대신 "기사 토론 · 3 댓글" 같은 뉴스 어휘 노출 검토 (디자인 옵션)</li>
+  </ul>
+</section>
+
+<!-- §8 Claude 에 줄 prompt block -->
+<section>
+  <h2><span class="num">§8</span> Claude 에 줄 Prompt (Copy-Paste)</h2>
+  <p>아래 블록을 통째로 복사해서 claude.ai 새 대화에 붙여넣으면 Claude 가 Artifacts 모드로 RN 화면 mockup 생성을 시작한다.</p>
+
+  <div class="prompt-block">너는 시니어 모바일 UI/UX 디자이너야. 다음 앱의 high-fidelity mockup 을 만들어줘.
+
+# 앱: agentNews
+컨셉: 위장 뉴스앱 + 비밀 1:1 채팅. 뉴스 피드에서 1·3·5·7번 기사를 5→3→1→7 순으로 탭하면 채팅 모드 전환. 외부에서는 평범한 뉴스 앱처럼 보여야 함.
+
+# 기술 스택
+- React Native + NativeWind + React Navigation
+- Apple HIG iOS 17 풍 (SF Pro / iOS system colors / 8pt grid)
+- Apple News (뉴스 피드) + Apple Messages (채팅) 의 시각 언어 결합
+
+# 화면 13개 (위장 강화 명명 — 채팅도 ArticleDetailScreen 내부 swap)
+- LoginScreen, RegisterScreen, SequenceResetScreen (미인증)
+- NewsFeedScreen (메인 피드, 뉴스 카드 리스트, 첫 카드 hero)
+- ArticleDetailScreen (기사 상세 — *unlock+PAIRED 시 채팅 모드로 swap*)
+- PairingSearchScreen (사용자 ID 검색 → 페어링 요청)
+- PairingRequestScreen (수락/거부/취소)
+- SettingsScreen, ProfileEditScreen, SequenceChangeScreen, SequenceResetRequestScreen, PairDisconnectScreen
+
+# 디자인 토큰
+- Background: #f5f5f7, Surface: #ffffff, Text: #1d1d1f / #86868b
+- Accent: #007aff (iOS system blue) — message bubble (me)
+- Peer bubble: #e9e9eb
+- Card radius: 12, Modal radius: 18, Message corner: 22
+- Card shadow: 0 1px 3px rgba(0,0,0,.08)
+- Typography: SF Pro Display 22/700 (news title), SF Pro Text 17/400 (chat), 12/500 uppercase (source)
+
+# 핵심 User Flow 3개
+1. 위장 진입: NewsFeed → 기사 5,3,1,7 차례 탭 → ArticleDetailScreen 안에서 채팅 모드로 conditional swap
+2. 위장 알림: peer 메시지 → 푸시 "📰 새 뉴스 — &lt;헤드라인&gt; / &lt;매체&gt;" → tap → NewsFeed 진입 (위장 유지) → 사용자가 별도 시퀀스
+3. 첨부: 채팅 모드에서 OS sharesheet → 사진/PDF → 메시지 버블 inline preview
+
+# 위장 강화 (CRITICAL — mockup 에서 enforce)
+- 앱 이름 "DailyNews" / 아이콘 신문. "chat/secret/agent" 단어 0
+- 채팅 화면 URL/route 안 보임 (RN 이라 URL bar 자체 없음)
+- Notification Center 미리보기: 헤드라인만, data payload 0
+- App Switcher preview 채팅 화면 → 뉴스 화면 swap
+- 스크린샷 차단 (FLAG_SECURE / iOS blur)
+
+# Deliverables (한 번에 다 만들지 말고 하나씩)
+1. 첫 번째 artifact: NewsFeedScreen — Apple News 풍, 카드 6개, hero 1, pull-to-refresh 인디케이터
+2. 두 번째: ArticleDetailScreen (일반 모드) — 큰 hero 이미지 + 제목 + 본문 일부
+3. 세 번째: ArticleDetailScreen (채팅 swap 모드) — 같은 헤더 + 그 아래 메시지 리스트 + ChatInputBar
+4. 네 번째: PairingSearchScreen — 검색 + 결과 카드
+5. 다섯 번째: PushNotification preview (iOS / Android 둘 다)
+6. 여섯 번째: SettingsScreen + 모달 (시퀀스 변경)
+
+각 artifact 은 React 컴포넌트 + Tailwind CSS 로. 단일 self-contained, iPhone 14 frame (390×844) 안에 배치. mock 데이터로 채워줘 (뉴스 헤드라인 예시 5개, 메시지 예시 8개).
+
+먼저 1번 NewsFeedScreen 만들어줘.</div>
+</section>
+
+<!-- §9 산출물 참조 -->
+<section>
+  <h2><span class="num">§9</span> 산출물 참조 (더 깊은 컨텍스트가 필요할 때)</h2>
+  <p>Claude 가 추가 명세 요구할 때 인용할 절대 경로:</p>
+  <table>
+    <thead><tr><th>주제</th><th>파일</th></tr></thead>
+    <tbody>
+      <tr><td>한 줄 brief + 위장 컨셉</td><td><code>~/WTF/agentic_system_test/.planning/tasks/PLAN-003/brief.md</code></td></tr>
+      <tr><td>요구사항 REQ-001~025</td><td><code>output/base/requirements_spec.md</code></td></tr>
+      <tr><td>화면 13 + 액션 + 권한</td><td><code>output/spec/screen_inventory_and_function_definition.md</code></td></tr>
+      <tr><td>시나리오 12 + 상태 전이 매트릭스</td><td><code>output/spec/user_scenarios.md</code></td></tr>
+      <tr><td>RN Navigation Stack 구조</td><td><code>output/spec/menu_structure.md</code></td></tr>
+      <tr><td>개발 컨벤션 (Apple HIG / RN bare workflow)</td><td><code>output/spec/development_conventions.md</code></td></tr>
+      <tr><td>API 명세 10 도메인 (auth, news, secret_unlock, pairing, chat, message, attachment, notification, audit_log, user_management)</td><td><code>output/api/*.md</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer class="foot">
+  Humanless Planning System v0.2 / 진짜 6 에이전트 병렬 / PLAN-003 = 5h 실행 / 22 산출물 / 7913 행 ·
+  <code>open /Users/whatsupjuno/WTF/agentic_system_test/.planning/tasks/PLAN-003/output/</code>
+</footer>
+
+</div>
+</body>
+</html>

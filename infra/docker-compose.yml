@@ -1,0 +1,62 @@
+name: agentnews
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agentnews-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agentnews}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentnews_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-agentnews}
+    ports:
+      - "5432:5432"
+    volumes:
+      # 컨테이너 최초 부팅 시 docker-entrypoint-initdb.d 의 *.sql 자동 적재.
+      # DDL 변경 후에는 `docker compose down -v` 로 볼륨 재생성 필요.
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agentnews} -d ${POSTGRES_DB:-agentnews}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: agentnews-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-agentnews}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-agentnews_dev}
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # 콘솔 UI
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 최초 부팅 시 버킷 자동 생성 (mc client)
+  minio-bootstrap:
+    image: minio/mc:latest
+    container_name: agentnews-minio-bootstrap
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-agentnews} ${MINIO_SECRET_KEY:-agentnews_dev} &&
+      mc mb -p local/${MINIO_BUCKET:-agentnews-attachments} || true &&
+      mc anonymous set none local/${MINIO_BUCKET:-agentnews-attachments} &&
+      echo 'bucket ready'
+      "
+    restart: "no"
+
+volumes:
+  pgdata:
+  miniodata:
