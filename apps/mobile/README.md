@@ -36,15 +36,28 @@ pnpm --filter @agentnews/mobile start
 # Expo Go 만으로는 react-native-keychain 동작 안 함.
 ```
 
-## 의존성 메모
+## 의존성 메모 (Phase 1 — Expo managed)
 
-- `react-native-keychain` 은 Expo Go 미지원 → EAS dev build 필요. 임시 대안으로 `expo-secure-store` 로 시작 가능
-- `nativewind` v4: babel preset + metro plugin + global.css 입력 필요 (이미 설정됨)
-- `expo-notifications`: iOS push 는 APNs key 필요. Android 는 FCM. 백엔드는 firebase-admin 단일 (FCM 이 APNs 자동 중계)
+전부 Expo Go 만으로 동작. dev build / native 컴파일 불필요.
+
+- **`expo-secure-store`** — iOS Keychain + Android Keystore 래핑. JWT 토큰 저장
+- **`expo-notifications`** — FCM/APNs 통합 푸시. 백엔드는 firebase-admin 단일 (FCM 이 iOS APNs 자동 중계)
+- **`expo-image-picker`** / **`expo-document-picker`** — 첨부 picker
+- **`expo-screen-capture`** — Android FLAG_SECURE 자동. 채팅 모드 진입 시 prevent → 종료 시 allow
+- **`expo-blur`** — iOS 백그라운드 진입 시 채팅 화면 위에 blur view 덮기 (App Switcher 위장)
+- **NativeWind v4** — babel preset + metro plugin + `global.css` 입력 이미 설정됨
+
+## Phase 2 (Post-MVP) — RN bare 마이그레이션
+
+native 미세 제어 필요 시점에 `npx expo prebuild` 로 전환. 다음 패키지 교체 검토:
+- `expo-secure-store` → `react-native-keychain`
+- `expo-notifications` → `@react-native-firebase/messaging`
+- `expo-image-picker` → `react-native-image-picker`
+- `expo-screen-capture` → 직접 `WindowManager.LayoutParams.FLAG_SECURE` 호출
 
 ## 다음 작업
 
-1. `pnpm install` 후 `pnpm mobile:dev` 로 부팅 확인
+1. `pnpm install` 후 `pnpm mobile:dev` 로 부팅 확인 (Expo Go 앱으로 QR 스캔)
 2. `src/services/api.ts` 작성 (백엔드 fetch wrapper, JWT 헤더)
 3. `src/store/` 인증 / unlock 세션 상태 관리
-4. `NewsFeedScreen` 의 시퀀스 탭 추적 로직 구현 (1초 rate limit, REQ-007)
+4. `NewsFeedScreen` 의 워드마크 ARM + 시퀀스 트래커 훅 (M2-5, **`showToast` 금지**)

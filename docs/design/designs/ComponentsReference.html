@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — Components Reference (P1)</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --paper: #fff;
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --line: rgba(60,60,67,0.12);
+    --accent: #007aff;
+    --red: #ff3b30;
+    --green: #34c759;
+    --orange: #ff9500;
+    --peer: #e9e9eb;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: var(--bg);
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+
+  /* Hero */
+  header.hero { margin-bottom: 48px; padding-bottom: 28px; border-bottom: 0.5px solid var(--line); }
+  .eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.8px; color: var(--orange); text-transform: uppercase; margin-bottom: 10px; }
+  header.hero h1 { margin: 0; font-family: -apple-system, "SF Pro Display", sans-serif; font-size: 44px; font-weight: 800; letter-spacing: -1.2px; }
+  header.hero .sub { font-size: 16px; color: #515154; margin-top: 12px; max-width: 720px; }
+
+  /* Section */
+  section.spec { margin-top: 56px; }
+  .spec-head {
+    display: grid; grid-template-columns: 64px 1fr;
+    gap: 20px; align-items: center;
+    margin-bottom: 24px;
+  }
+  .spec-num {
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 52px; font-weight: 800; letter-spacing: -1.5px;
+    color: var(--orange);
+    line-height: 1;
+  }
+  .spec-title h2 { margin: 0; font-family: -apple-system, "SF Pro Display", sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.4px; }
+  .spec-title .scn { font-size: 11px; font-weight: 700; letter-spacing: 1.6px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .spec-title p { margin: 6px 0 0; font-size: 14px; color: #515154; max-width: 780px; }
+
+  /* Variant strip */
+  .variants {
+    display: grid;
+    gap: 16px;
+  }
+  .v-2 { grid-template-columns: repeat(2, 1fr); }
+  .v-3 { grid-template-columns: repeat(3, 1fr); }
+  .v-4 { grid-template-columns: repeat(4, 1fr); }
+  .v-1 { grid-template-columns: 1fr; }
+
+  .variant {
+    background: var(--paper);
+    border: 0.5px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .variant-head {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .variant-name {
+    font-size: 13px; font-weight: 600; letter-spacing: -0.2px;
+  }
+  .variant-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    padding: 2px 7px; border-radius: 999px;
+    text-transform: uppercase;
+  }
+  .tag-progress { background: #fef3e2; color: var(--orange); }
+  .tag-error    { background: #fee2e1; color: var(--red); }
+  .tag-ok       { background: #d8f1e0; color: #28a745; }
+  .tag-pending  { background: #f1f1f3; color: var(--muted); }
+
+  .variant-canvas {
+    flex: 1;
+    padding: 24px;
+    background: linear-gradient(180deg, #fafafa 0%, #f0f0f3 100%);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 180px;
+  }
+  .variant-canvas.chat-bg { background: #fff; align-items: stretch; padding: 16px; }
+  .variant-foot {
+    padding: 12px 16px;
+    border-top: 0.5px solid var(--line);
+    font-size: 12px; color: var(--muted); line-height: 1.55;
+  }
+  .variant-foot code {
+    background: #f1f1f3; padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    color: var(--text);
+  }
+
+  /* Phone preview */
+  .phone-canvas {
+    width: 100%;
+    height: 380px;
+    background: linear-gradient(180deg, #eef0f2 0%, #e1e4e8 100%);
+    padding: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phone-mini {
+    width: 200px; height: 360px;
+    background: var(--paper);
+    border: 4px solid #1d1d1f;
+    border-radius: 26px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  .phone-mini .notch {
+    position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+    width: 48px; height: 10px; background: #1d1d1f; border-radius: 0 0 8px 8px; z-index: 5;
+  }
+
+  /* ────── Attachment chip ────── */
+  .att-chip {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--paper);
+    border: 0.5px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 14px 10px 10px;
+    width: 100%;
+    max-width: 280px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .att-chip .thumb {
+    width: 44px; height: 44px; border-radius: 8px;
+    background: repeating-linear-gradient(135deg, #d3dde6 0 5px, #c1cad3 5px 10px);
+    flex-shrink: 0; position: relative; overflow: hidden;
+  }
+  .att-chip .info { flex: 1; min-width: 0; }
+  .att-chip .name {
+    font-size: 14px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.2px;
+  }
+  .att-chip .status {
+    font-size: 12px; color: var(--muted); margin-top: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .att-chip.fail .status { color: var(--red); }
+  .att-chip.done .status { color: #28a745; }
+
+  /* progress bar fill on thumb */
+  .att-chip .progress {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.55);
+    color: #fff; font-size: 10px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    padding: 2px 4px; letter-spacing: 0.2px;
+    text-align: center;
+  }
+  .att-chip .x {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: rgba(0,0,0,0.55); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .att-chip.fail .thumb {
+    background: #fee2e1; display: flex; align-items: center; justify-content: center;
+  }
+  .att-chip.fail .thumb::after { content: '!'; color: var(--red); font-size: 22px; font-weight: 800; }
+  .att-chip.done .thumb::after {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(0,0,0,0.0);
+  }
+
+  /* spin */
+  @keyframes dn-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  .spinner {
+    width: 14px; height: 14px; border-radius: 999px;
+    border: 2px solid rgba(0,0,0,0.15); border-top-color: var(--accent);
+    animation: dn-spin 0.8s linear infinite;
+    display: inline-block;
+  }
+
+  /* ────── Bubble preview ────── */
+  .bub-stack {
+    display: flex; flex-direction: column; gap: 6px;
+    align-items: stretch;
+  }
+  .bub {
+    padding: 8px 14px 9px;
+    border-radius: 22px;
+    font-size: 16px; line-height: 1.32;
+    letter-spacing: -0.2px;
+    max-width: 78%;
+  }
+  .bub.peer { background: var(--peer); color: var(--text); align-self: flex-start; }
+  .bub.me   { background: var(--accent); color: #fff; align-self: flex-end; }
+
+  /* image bubble */
+  .bub-img {
+    padding: 4px;
+    max-width: 78%;
+    align-self: flex-end;
+  }
+  .bub-img .pic {
+    width: 200px; height: 150px; border-radius: 18px;
+    background: repeating-linear-gradient(135deg, #d3dde6 0 8px, #c1cad3 8px 16px);
+  }
+  .bub-img .caption {
+    color: #fff; font-size: 14px; padding: 6px 10px 4px;
+  }
+
+  /* PDF bubble */
+  .bub-pdf {
+    background: var(--accent); color: #fff;
+    border-radius: 22px;
+    padding: 4px; max-width: 78%; align-self: flex-end;
+  }
+  .pdf-card {
+    background: rgba(255,255,255,0.16);
+    border-radius: 18px;
+    padding: 10px 12px;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .pdf-icon {
+    width: 36px; height: 44px; border-radius: 5px;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--red); font-size: 11px; font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.05);
+    position: relative;
+  }
+  .pdf-icon::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 10px; height: 10px;
+    background: #fff;
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+    border-bottom: 2px solid #f5f5f7;
+    border-left: 2px solid #f5f5f7;
+  }
+  .pdf-info .name { font-size: 14px; font-weight: 500; }
+  .pdf-info .size { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+
+  /* ────── Empty state ────── */
+  .empty-state {
+    text-align: center; padding: 24px 16px; width: 100%;
+  }
+  .empty-state .ic {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: var(--paper);
+    margin: 0 auto 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    font-size: 28px;
+  }
+  .empty-state .ttl { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+  .empty-state .desc { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.55; max-width: 240px; margin-left: auto; margin-right: auto; }
+
+  /* Feed skeleton */
+  .feed-skel {
+    width: 100%; padding: 0 8px;
+  }
+  .feed-skel .row {
+    display: flex; gap: 10px; padding: 8px 0;
+  }
+  .feed-skel .tx { flex: 1; }
+  .feed-skel .line {
+    height: 8px; border-radius: 4px;
+    background: linear-gradient(90deg, #e5e5ea 0%, #f1f1f3 50%, #e5e5ea 100%);
+    background-size: 200% 100%;
+    animation: dn-shimmer 1.4s infinite linear;
+    margin-bottom: 5px;
+  }
+  .feed-skel .line.s { width: 65%; }
+  .feed-skel .img {
+    width: 56px; height: 56px; border-radius: 6px;
+    background: linear-gradient(90deg, #e5e5ea 0%, #f1f1f3 50%, #e5e5ea 100%);
+    background-size: 200% 100%;
+    animation: dn-shimmer 1.4s infinite linear;
+    flex-shrink: 0;
+  }
+  .feed-skel .hero {
+    height: 86px; border-radius: 8px;
+    background: linear-gradient(90deg, #e5e5ea 0%, #f1f1f3 50%, #e5e5ea 100%);
+    background-size: 200% 100%;
+    animation: dn-shimmer 1.4s infinite linear;
+    margin-bottom: 8px;
+  }
+  @keyframes dn-shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+
+  /* ────── App switcher ────── */
+  .switcher {
+    width: 100%; padding: 16px;
+    background: #000;
+    border-radius: 14px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .switcher-card {
+    background: #fff;
+    border-radius: 18px;
+    aspect-ratio: 9/19;
+    padding: 8px 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .switcher-card .label {
+    position: absolute; bottom: 8px; left: 0; right: 0;
+    text-align: center; color: #fff;
+    font-size: 11px; font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .switcher-card .h {
+    font-size: 11px; font-weight: 800; letter-spacing: -0.4px; padding: 4px;
+  }
+  .switcher-card .h .d { color: var(--red); font-size: 5px; font-weight: 700; letter-spacing: 1px; }
+  .switcher-card .hero {
+    height: 38px; border-radius: 4px; margin-top: 3px;
+    background: repeating-linear-gradient(135deg, #dbe5d3 0 5px, #c8d2c0 5px 10px);
+  }
+  .switcher-card .ttl { font-size: 7px; font-weight: 600; margin-top: 4px; line-height: 1.2; padding: 0 4px; }
+  .switcher-card .row {
+    display: flex; gap: 4px; align-items: center;
+    background: #f5f5f7; padding: 3px; border-radius: 4px;
+    margin-top: 4px;
+  }
+  .switcher-card .row .tx { flex: 1; font-size: 5px; font-weight: 500; line-height: 1.2; }
+  .switcher-card .row .im { width: 18px; height: 18px; border-radius: 3px; }
+
+  /* arrow between switcher panels */
+  .switcher-arrow {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--orange);
+    margin: 8px 0 0;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.4px;
+  }
+
+  /* ────── DEV note ────── */
+  .devnote {
+    background: var(--text); color: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 13px;
+    display: flex; gap: 12px;
+    align-items: flex-start;
+  }
+  .devnote .ic {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--accent); color: #fff;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700;
+  }
+  .devnote code {
+    background: rgba(255,255,255,0.1);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+  }
+  .devnote b { color: #fff; }
+
+  /* footer */
+  footer.foot {
+    margin-top: 64px; padding-top: 22px;
+    border-top: 0.5px solid var(--line);
+    font-size: 12px; color: var(--muted);
+    text-align: center;
+  }
+  footer.foot a { color: var(--accent); text-decoration: none; }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .v-4 { grid-template-columns: repeat(2, 1fr); }
+    .v-3 { grid-template-columns: 1fr; }
+  }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="hero">
+    <div class="eyebrow">P1 · Components Reference · MVP</div>
+    <h1>구성 요소 사양</h1>
+    <p class="sub">
+      MVP 화면 6종에서 반복되는 컴포넌트 / 상태 / 미세 패턴을 한 곳에 모았습니다.
+      각 카드 = 1 개 컴포넌트 + 모든 state. 토큰 값은 README §6 참조.
+    </p>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- 1. Attachment Upload Chip — 3 states                              -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="spec">
+    <div class="spec-head">
+      <div class="spec-num">01</div>
+      <div class="spec-title">
+        <div class="scn">AttachmentChip · 3 states</div>
+        <h2>첨부 업로드 칩</h2>
+        <p>전송 직전 composer 영역에 표시. 업로드 진행률 → 실패 / 완료 분기. 메시지 본문과 함께 전송될 때 bubble preview 로 승격.</p>
+      </div>
+    </div>
+
+    <div class="variants v-3">
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">UPLOADING</div>
+          <div class="variant-tag tag-progress">진행 중</div>
+        </div>
+        <div class="variant-canvas">
+          <div class="att-chip">
+            <div class="thumb">
+              <div class="progress">62%</div>
+            </div>
+            <div class="info">
+              <div class="name">reference-board.png</div>
+              <div class="status"><span class="spinner"></span> 업로드 중… 8.2 MB</div>
+            </div>
+            <div class="x">✕</div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          <code>status: 'UPLOADING'</code> · 진행률은 thumb 하단 라벨로 노출. <b>취소 가능</b> (×).
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">FAILED</div>
+          <div class="variant-tag tag-error">에러</div>
+        </div>
+        <div class="variant-canvas">
+          <div class="att-chip fail">
+            <div class="thumb"></div>
+            <div class="info">
+              <div class="name">reference-board.png</div>
+              <div class="status">네트워크 끊김 · <b style="color:#ff3b30">재시도</b></div>
+            </div>
+            <div class="x">✕</div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          <code>status: 'FAILED'</code> · thumb 자리에 빨간 ! 아이콘. "재시도" 탭 → re-upload.
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">AVAILABLE</div>
+          <div class="variant-tag tag-ok">완료</div>
+        </div>
+        <div class="variant-canvas">
+          <div class="att-chip done">
+            <div class="thumb"></div>
+            <div class="info">
+              <div class="name">reference-board.png</div>
+              <div class="status">
+                <svg width="11" height="11" viewBox="0 0 11 11"><path d="M2 6l2.5 2.5L9 3" stroke="#28a745" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                전송 준비 완료 · 8.2 MB
+              </div>
+            </div>
+            <div class="x">✕</div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          <code>status: 'AVAILABLE'</code> · 서버 검증 (MIME + 매직바이트) 통과. 메시지 전송 가능.
+        </div>
+      </div>
+    </div>
+
+    <div class="devnote">
+      <div class="ic">i</div>
+      <div>
+        <b>인터랙션.</b> <code>POST /api/v1/attachments</code> (multipart) → <code>UPLOADING</code> · 서버 검증 후 <code>AVAILABLE</code>. 전송 시 message body 와 함께 link.
+        <br/>이미지: max 200×200 dp inline preview · PDF: 아이콘 + 파일명 + 크기.
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- 2. In-bubble preview — image + PDF                                -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="spec">
+    <div class="spec-head">
+      <div class="spec-num">02</div>
+      <div class="spec-title">
+        <div class="scn">MessageBubble · attachment variants</div>
+        <h2>메시지 버블 첨부 미리보기</h2>
+        <p>전송 완료 시 첨부는 버블 안에 inline. 이미지는 thumbnail, PDF 는 파일 카드. 탭 → OS 기본 뷰어.</p>
+      </div>
+    </div>
+
+    <div class="variants v-2">
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">이미지 첨부</div>
+          <div class="variant-tag tag-ok">200×200 r12</div>
+        </div>
+        <div class="variant-canvas chat-bg">
+          <div class="bub-stack">
+            <div class="bub peer">참고 사진 좀 보여줘</div>
+            <div class="bub bub-img" style="background:#007aff;border-radius:22px">
+              <div class="pic"></div>
+              <div class="caption">이거 어때?</div>
+            </div>
+            <div class="bub me">완벽해 👌</div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          이미지 = <code>200×200 dp cap · inner radius 18</code> · 버블 padding 4 + outer radius 22.
+          <b>caption</b> 은 이미지 아래 6/10/4 padding.
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">PDF 첨부</div>
+          <div class="variant-tag tag-ok">아이콘 카드</div>
+        </div>
+        <div class="variant-canvas chat-bg">
+          <div class="bub-stack">
+            <div class="bub peer">기획안 좀 보내줘</div>
+            <div class="bub-pdf">
+              <div class="pdf-card">
+                <div class="pdf-icon">PDF</div>
+                <div class="pdf-info">
+                  <div class="name">2026-Q2-기획안.pdf</div>
+                  <div class="size">1.2 MB · 4 페이지</div>
+                </div>
+              </div>
+            </div>
+            <div class="bub me">확인했어 ✓</div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          PDF 카드 = 흰색 PDF 아이콘 (접힌 모서리) + 파일명 + 크기·페이지수.
+          <code>tap → react-native-pdf | Linking.openURL</code>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- 3. Empty states — feed skeleton + chat empty                      -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="spec">
+    <div class="spec-head">
+      <div class="spec-num">03</div>
+      <div class="spec-title">
+        <div class="scn">EmptyState · 2 variants</div>
+        <h2>빈 상태</h2>
+        <p>피드 첫 진입 시 skeleton. 채팅 처음 swap 시 위장 어휘로 안내 ("토론을 시작해보세요").</p>
+      </div>
+    </div>
+
+    <div class="variants v-2">
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">피드 첫 로딩 · skeleton</div>
+          <div class="variant-tag tag-pending">SHIMMER 1.4s</div>
+        </div>
+        <div class="variant-canvas" style="padding:16px">
+          <div class="feed-skel">
+            <div class="hero"></div>
+            <div class="line"></div>
+            <div class="line s"></div>
+            <div class="row">
+              <div class="tx">
+                <div class="line" style="margin-top:6px"></div>
+                <div class="line s"></div>
+              </div>
+              <div class="img"></div>
+            </div>
+            <div class="row">
+              <div class="tx">
+                <div class="line" style="margin-top:6px"></div>
+                <div class="line s"></div>
+              </div>
+              <div class="img"></div>
+            </div>
+            <div class="row">
+              <div class="tx">
+                <div class="line" style="margin-top:6px"></div>
+                <div class="line s"></div>
+              </div>
+              <div class="img"></div>
+            </div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          shimmer = <code>linear-gradient(90deg, #e5e5ea, #f1f1f3, #e5e5ea)</code> · 200% 1.4s linear.
+          API 응답 전 표시 · 응답 후 fade-out 220ms.
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">채팅 첫 진입 · 0개</div>
+          <div class="variant-tag tag-pending">위장 어휘</div>
+        </div>
+        <div class="variant-canvas chat-bg">
+          <div class="empty-state">
+            <div class="ic">📰</div>
+            <div class="ttl">아직 댓글이 없어요</div>
+            <div class="desc">기사 토론을 시작해보세요. 구독자도 함께 볼 수 있습니다.</div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          어휘 = <b>"댓글" · "기사 토론" · "구독자"</b>. <code>chat / secret / message</code> 단어 절대 금지.
+          빈 채팅 화면은 일반 댓글창과 구별 불가.
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- 4. App Switcher 위장 placeholder                                  -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="spec">
+    <div class="spec-head">
+      <div class="spec-num">04</div>
+      <div class="spec-title">
+        <div class="scn">AppSwitcher · disguise swap</div>
+        <h2>앱 스위처 위장 — before / after</h2>
+        <p>채팅 모드에서 백그라운드 전환 시 즉시 일반 피드 화면으로 swap. iOS App Switcher / Android Recents 에서 채팅 내용 절대 노출 X.</p>
+      </div>
+    </div>
+
+    <div class="variants v-1">
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">App Switcher Preview (양쪽 비교)</div>
+          <div class="variant-tag tag-ok">FOREGROUND <span style="margin:0 8px;color:var(--orange)">→</span> BACKGROUND</div>
+        </div>
+        <div class="variant-canvas" style="background:#0a0a0a;padding:24px">
+          <div class="switcher">
+            <div class="switcher-card">
+              <div style="padding:4px 4px 0">
+                <div style="font-size:5px;font-weight:600;text-align:center;padding:3px 0 4px;border-bottom:0.5px solid #e5e5ea;margin-bottom:3px">기사 토론</div>
+                <div style="background:#f5f5f7;padding:2px 4px;border-radius:3px;font-size:5px;font-weight:600;color:#515154">📰 토론 중 · 폐공장이 복합문화...</div>
+                <div style="text-align:center;font-size:4px;color:#86868b;margin-top:4px">오늘 오전 11:48</div>
+                <div style="margin-top:3px;padding:2px 4px;background:#e9e9eb;color:#1d1d1f;font-size:5px;border-radius:5px;max-width:60%;line-height:1.3">어제 기획안 봤어?</div>
+                <div style="margin-top:2px;margin-left:auto;padding:2px 4px;background:#007aff;color:#fff;font-size:5px;border-radius:5px;max-width:60%;line-height:1.3;width:fit-content">방향성은 좋더라</div>
+                <div style="margin-top:2px;padding:2px 4px;background:#e9e9eb;color:#1d1d1f;font-size:5px;border-radius:5px;max-width:60%;line-height:1.3">어떤 부분?</div>
+                <div style="margin-top:2px;margin-left:auto;padding:2px 4px;background:#007aff;color:#fff;font-size:5px;border-radius:5px;max-width:60%;line-height:1.3;width:fit-content">3번 섹션이 약해</div>
+              </div>
+              <div class="label">FOREGROUND · 채팅 모드</div>
+            </div>
+            <div class="switcher-card">
+              <div class="h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="hero"></div>
+              <div class="ttl">기후 정상회담, 25개국 탄소 합의</div>
+              <div class="row"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 4px,#ced6df 4px 8px)"></div></div>
+              <div class="row"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 4px,#c1cad3 4px 8px)"></div></div>
+              <div class="label">BACKGROUND · 위장 swap</div>
+            </div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          iOS: <code>UIApplication willResignActive</code> → root view 를 <code>NewsFeedScreen</code> 으로 swap (애니메이션 X · 즉시).
+          Android: <code>FLAG_SECURE</code> 활성화 후 onPause 에서 동일 swap.
+          <br/><b>중요:</b> 단순 blur 아닌 <b>완전한 다른 화면</b>. 백그라운드 → 포그라운드 복귀 시 unlock_token 유효하면 다시 채팅 모드로 복원.
+        </div>
+      </div>
+    </div>
+
+    <div class="devnote">
+      <div class="ic">i</div>
+      <div>
+        <b>iOS native bridge 필요.</b> RN JS 만으로는 App Switcher 시점에 swap 불가능. <code>useApplicationState()</code> 같은 hook 이 아닌 native lifecycle hook 사용.
+        <code>react-native-screens</code> + <code>AppState</code> 조합 + 네이티브 <code>SnapshotProtector</code> 라이브러리.
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- 5. Message send failed / retry                                    -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="spec">
+    <div class="spec-head">
+      <div class="spec-num">05</div>
+      <div class="spec-title">
+        <div class="scn">MessageBubble · failed state</div>
+        <h2>메시지 전송 실패 / 재전송</h2>
+        <p>네트워크 끊김 등으로 전송 실패 시 버블 옆에 빨간 ! 표시 + 탭 시 재전송 액션시트.</p>
+      </div>
+    </div>
+
+    <div class="variants v-2">
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">전송 중</div>
+          <div class="variant-tag tag-progress">SENDING</div>
+        </div>
+        <div class="variant-canvas chat-bg">
+          <div class="bub-stack">
+            <div class="bub peer">언제쯤 가능해?</div>
+            <div style="display:flex;align-items:center;gap:6px;align-self:flex-end">
+              <span class="spinner"></span>
+              <div class="bub me" style="opacity:0.6">내일 오후 2시쯤</div>
+            </div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          opacity 0.6 + 왼쪽 스피너. <code>status: 'SENDING'</code>. 평소엔 1초 이내 다음 state.
+        </div>
+      </div>
+
+      <div class="variant">
+        <div class="variant-head">
+          <div class="variant-name">전송 실패</div>
+          <div class="variant-tag tag-error">FAILED</div>
+        </div>
+        <div class="variant-canvas chat-bg">
+          <div class="bub-stack">
+            <div class="bub peer">언제쯤 가능해?</div>
+            <div style="display:flex;align-items:center;gap:8px;align-self:flex-end">
+              <div style="width:18px;height:18px;border-radius:999px;background:#ff3b30;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">!</div>
+              <div class="bub me">내일 오후 2시쯤</div>
+            </div>
+            <div style="align-self:flex-end;font-size:12px;color:#ff3b30;font-weight:500;margin-top:2px;margin-right:26px">
+              전송 실패 · 탭하여 재시도
+            </div>
+          </div>
+        </div>
+        <div class="variant-foot">
+          빨간 ! 배지 + 하단 "탭하여 재시도" 라벨. 탭 → action sheet (재시도 / 삭제 / 취소).
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <footer class="foot">
+    <span>DailyNews Components Reference · P1 · 5 sections · <a href="index.html">← Mockup Index</a></span>
+  </footer>
+
+</div>
+
+</body>
+</html>

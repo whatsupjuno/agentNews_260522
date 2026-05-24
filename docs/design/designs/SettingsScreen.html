@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — 설정 + 시퀀스 변경 모달</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: radial-gradient(1400px 700px at 50% -10%, #ececef 0%, transparent 60%), #e6e6ea;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .stage { display: flex; align-items: flex-start; justify-content: center; gap: 28px; padding: 40px 24px; flex-wrap: wrap; }
+  .caption { max-width: 260px; color: #515154; font-size: 13px; line-height: 1.55; padding-top: 8px; }
+  .caption .eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #86868b; margin-bottom: 8px; }
+  .caption h1 { margin: 0 0 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: #1d1d1f; }
+  .caption p { margin: 0 0 10px; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .col-label { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; color: #86868b; text-transform: uppercase; }
+  .col-sub { font-size: 12px; color: #6e6e73; max-width: 360px; text-align: center; line-height: 1.5; }
+  .col-sub b { color: #1d1d1f; font-weight: 600; }
+  .hint { margin-top: 14px; padding: 10px 12px; background: #fff; border: 0.5px solid rgba(0,0,0,0.08); border-radius: 10px; font-size: 11.5px; line-height: 1.5; color: #515154; }
+  .hint b { color: #007aff; }
+
+  @keyframes dn-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes dn-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <aside class="caption">
+    <div class="eyebrow">Artifact 06 / 06</div>
+    <h1>SettingsScreen</h1>
+    <p>iOS 풍 그룹드 리스트. 위장 명명 — <b>콘텐츠 잠금 코드</b> (= 시퀀스), <b>잠금 해제 도움말</b> (= reset request), <b>구독자 관리</b> (= 페어).</p>
+    <div class="hint">
+      "콘텐츠 잠금 코드" 행 탭 → 하단 시트 모달.<br/>
+      <b>피드의 카드 4장을 순서대로 탭</b> → 진행 표시 → 저장.<br/>
+      외부 어휘로만 표현 — secret/chat 단어 0.
+    </div>
+  </aside>
+
+  <div class="col">
+    <div class="col-label">Settings List</div>
+    <div id="device-settings"></div>
+    <div class="col-sub">프로필 카드 · 계정 · 콘텐츠 · 앱 · 로그아웃 · 탈퇴. "구독자 1명과 연결됨" 배지.</div>
+  </div>
+
+  <div class="col">
+    <div class="col-label">Sequence Change Modal</div>
+    <div id="device-modal"></div>
+    <div class="col-sub"><b>인터랙티브</b> — 7장 카드 탭으로 새 순서 등록. 진행 슬롯 4개 · 처음부터 다시 · 저장.</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="screens/shared.jsx"></script>
+<script type="text/babel" src="screens/settings-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  ReactDOM.createRoot(document.getElementById('device-settings')).render(
+    <IOSDevice width={390} height={844}>
+      <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }} data-screen-label="06 Settings">
+        <SettingsScreen openModal={false}/>
+      </div>
+    </IOSDevice>
+  );
+
+  ReactDOM.createRoot(document.getElementById('device-modal')).render(
+    <IOSDevice width={390} height={844}>
+      <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }} data-screen-label="06 Settings + Modal">
+        <SettingsScreen openModal={true}/>
+      </div>
+    </IOSDevice>
+  );
+</script>
+
+</body>
+</html>

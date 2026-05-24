@@ -31,23 +31,25 @@ agentNews/
 
 ## 기술 스택
 
-| 영역 | 기술 |
+| 영역 | 기술 (Phase 1 — Expo managed) |
 |---|---|
-| 모바일 | React Native + **Expo (managed)** + TypeScript + NativeWind + React Navigation v7 |
-| 모바일 푸시 | `expo-notifications` (APNs + FCM) |
+| 모바일 | React Native + **Expo SDK 51 (managed, Expo Go)** + TypeScript + NativeWind + React Navigation v7 |
+| 모바일 푸시 | `expo-notifications` (FCM/APNs 통합) |
 | 모바일 파일 picker | `expo-document-picker` + `expo-image-picker` |
-| 모바일 토큰 저장 | `react-native-keychain` (EAS dev build 필요. Expo Go 미지원) |
+| 모바일 토큰 저장 | `expo-secure-store` (iOS Keychain + Android Keystore 래핑) |
+| 모바일 위장 (스크린샷/blur) | `expo-screen-capture` (Android FLAG_SECURE) + `expo-blur` (iOS 백그라운드) |
 | 백엔드 | NestJS 10+ + TypeScript + REST + WebSocket (Socket.IO) |
 | 백엔드 ORM | TypeORM Repository 패턴 (raw query 금지) |
 | 백엔드 암호 | bcrypt cost 12 / AES-256-GCM / HMAC-SHA256 |
 | 백엔드 푸시 | `firebase-admin` |
 | DB | PostgreSQL 16 + `pgcrypto` extension |
 | 첨부 저장소 | MinIO (S3 호환) — `@aws-sdk/client-s3` |
-| 외부 뉴스 API | GNews / MediaStack / NewsAPI.org 중 무료 tier 선정 |
+| 외부 뉴스 API | **GNews** (무료 100req/day, 한국어) |
 | 컨테이너 | Docker + docker-compose |
-| 배포 | iOS TestFlight, Android Firebase App Distribution |
+| 호스팅 | **Cafe24 (Docker)** — 백엔드 + DB + MinIO 단일 서버 self-host |
+| 배포 | **Android Firebase App Distribution** (Phase 1) → iOS TestFlight (Apple Dev 결제 후) |
 
-> **컨벤션 충돌 메모**: `docs/specs/spec/development_conventions.md` 는 RN bare + `@react-native-firebase/messaging` + `react-native-image-picker` 등 RN bare workflow 기준이지만, `docs/origin/agentNews-context.md` 가 Expo (managed) + `expo-*` 패키지로 최종 확정 (우선순위: Juno 지시 > brief > 매뉴얼). 본 repo 는 **Expo managed 채택**.
+> **Phase 2 마이그레이션 (Post-MVP)**: native 미세 제어 필요 시점에 `npx expo prebuild` 로 RN bare 전환. 그때 `react-native-keychain` / `@react-native-firebase/messaging` / `react-native-image-picker` 로 교체 옵션 검토.
 
 ---
 

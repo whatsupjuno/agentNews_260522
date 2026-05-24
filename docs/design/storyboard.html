@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — Storyboards (3 핵심 플로우)</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --paper: #ffffff;
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --line: #d4d4d8;
+    --accent: #007aff;
+    --red: #ff3b30;
+    --green: #34c759;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* ── HEADER ── */
+  header.page {
+    margin-bottom: 56px; padding-bottom: 28px;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .codename {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--red); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  header.page h1 {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: 52px; font-weight: 800; letter-spacing: -1.5px;
+    margin: 0; line-height: 1;
+  }
+  header.page p {
+    font-size: 17px; color: #515154;
+    margin: 14px 0 0; max-width: 640px;
+  }
+  .legend {
+    display: flex; gap: 28px; margin-top: 22px;
+    font-size: 12px; color: var(--muted);
+  }
+  .legend span { display: flex; align-items: center; gap: 8px; }
+  .legend .swatch {
+    width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--line);
+  }
+
+  /* ── FLOW SECTION ── */
+  .flow { margin-top: 72px; }
+  .flow-head {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    gap: 28px; align-items: end;
+    padding-bottom: 18px;
+    border-bottom: 0.5px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .flow-num {
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 72px; font-weight: 800; line-height: 0.85;
+    letter-spacing: -2px;
+    color: var(--text);
+  }
+  .flow-title h2 {
+    margin: 0;
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 28px; font-weight: 700; letter-spacing: -0.6px;
+  }
+  .flow-title .scn {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.8px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .flow-title p {
+    margin: 8px 0 0; color: #515154; font-size: 14px;
+  }
+  .flow-meta {
+    font-size: 11px; color: var(--muted);
+    text-align: right; line-height: 1.7;
+  }
+  .flow-meta b { color: var(--text); font-weight: 600; }
+
+  /* ── STRIP ── */
+  .strip {
+    display: grid;
+    gap: 18px;
+    overflow-x: auto;
+    padding: 8px 4px 24px;
+    scrollbar-width: thin;
+  }
+  .strip.cols-5 { grid-template-columns: repeat(5, minmax(220px, 1fr)); }
+  .strip.cols-4 { grid-template-columns: repeat(4, minmax(240px, 1fr)); }
+  .strip.cols-6 { grid-template-columns: repeat(6, minmax(200px, 1fr)); }
+  .strip.cols-3 { grid-template-columns: repeat(3, minmax(260px, 1fr)); }
+  .strip.cols-4w { grid-template-columns: repeat(4, 1fr); }
+  .strip.cols-4w > .frame { min-width: 0; }
+
+  /* ── FRAME ── */
+  .frame {
+    background: var(--paper);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 0.5px solid var(--line);
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+  .frame-head {
+    padding: 10px 12px 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 0.5px dashed var(--line);
+    background: #fafafa;
+  }
+  .frame-num {
+    width: 24px; height: 24px; border-radius: 999px;
+    background: var(--text); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .frame-tag {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 1.2px;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .frame-tag.danger { color: var(--red); }
+  .frame-tag.go { color: var(--green); }
+  .frame-tag.acc { color: var(--accent); }
+
+  /* phone stage */
+  .stage {
+    height: 280px;
+    background: linear-gradient(180deg, #eef0f2 0%, #e1e4e8 100%);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    padding: 14px;
+    overflow: hidden;
+  }
+  .phone {
+    width: 130px; height: 250px;
+    border-radius: 22px;
+    background: var(--paper);
+    border: 3px solid #1d1d1f;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+    position: relative;
+    font-size: 6.5px;
+  }
+  .phone .notch {
+    position: absolute; top: 3px; left: 50%;
+    transform: translateX(-50%);
+    width: 36px; height: 8px;
+    background: #1d1d1f; border-radius: 0 0 6px 6px;
+    z-index: 5;
+  }
+
+  /* annotations / arrows */
+  .annot {
+    position: absolute;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px;
+    color: var(--text);
+    line-height: 1.3;
+    pointer-events: none;
+  }
+  .annot.tap {
+    background: rgba(255, 59, 48, 0.92);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .annot.note {
+    background: #fff;
+    padding: 4px 7px;
+    border-radius: 6px;
+    border: 0.5px solid var(--line);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    max-width: 140px;
+  }
+  .annot.note b { color: var(--accent); font-weight: 600; }
+  .annot.arrow {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .pulse {
+    position: absolute;
+    border: 2px solid var(--red);
+    border-radius: 999px;
+    animation: dn-pulse 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes dn-pulse {
+    0% { transform: scale(0.7); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  /* frame footer / caption */
+  .frame-body {
+    padding: 12px 14px 14px;
+    flex: 1;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .frame-action {
+    font-size: 12.5px; font-weight: 600;
+    color: var(--text); letter-spacing: -0.2px;
+  }
+  .frame-action .verb {
+    color: var(--red);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .frame-state {
+    font-size: 11.5px; color: var(--muted); line-height: 1.45;
+  }
+  .frame-state code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10.5px;
+    background: #f1f1f3;
+    padding: 1px 5px; border-radius: 3px;
+    color: var(--text);
+  }
+
+  /* connecting arrows between frames */
+  .strip {
+    position: relative;
+  }
+  .arrow-sep {
+    align-self: center;
+    color: var(--accent);
+    font-size: 18px;
+    text-align: center;
+  }
+
+  /* ── login / register / settings atoms ───────────────────────────── */
+  .scr.auth { background: #fff; padding: 6px 5px; display: flex; flex-direction: column; align-items: center; }
+  .auth-logo { font-family: -apple-system, "SF Pro Display", sans-serif; font-size: 13px; font-weight: 800; letter-spacing: -0.5px; margin-top: 22px; }
+  .auth-sub { font-size: 5px; color: var(--muted); margin-top: 2px; }
+  .auth-field { width: 88%; margin-top: 8px; background: #f5f5f7; border-radius: 4px; padding: 4px 5px; font-size: 5px; color: var(--muted); }
+  .auth-field.filled { color: var(--text); font-weight: 500; }
+  .auth-cta { width: 88%; margin-top: 8px; background: var(--accent); color: #fff; border-radius: 4px; padding: 5px; text-align: center; font-size: 6px; font-weight: 600; }
+  .auth-link { font-size: 5px; color: var(--accent); margin-top: 6px; }
+
+  .scr.settings { background: var(--bg); padding: 4px; }
+  .set-prof { background: #fff; border-radius: 4px; padding: 4px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+  .set-prof .av { width: 14px; height: 14px; border-radius: 999px; background: linear-gradient(135deg, #c7d2dd, #93a4b6); flex-shrink: 0; }
+  .set-prof .info { font-size: 5px; line-height: 1.3; }
+  .set-prof .info b { font-weight: 600; }
+  .set-grp { background: #fff; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .set-row { padding: 3px 5px; font-size: 4.5px; display: flex; align-items: center; gap: 3px; border-top: 0.5px solid #e5e5ea; }
+  .set-row:first-child { border-top: none; }
+  .set-row .ic { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .set-row .det { color: var(--muted); margin-left: auto; font-size: 4px; }
+  .set-row .chev { color: #c5c5c7; font-size: 6px; }
+  .set-row.danger { color: var(--red); }
+  .set-row.sel { background: rgba(0,122,255,0.08); outline: 1.5px solid var(--accent); outline-offset: -1px; }
+  .set-grp .h { font-size: 4.5px; color: var(--muted); letter-spacing: 0.5px; padding: 4px 5px 2px; text-transform: uppercase; }
+
+  /* ── sheet modal compact ─────────────────────────────────────────── */
+  .scr.sheet { background: rgba(0,0,0,0.4); padding: 0; }
+  .sheet-card { position: absolute; left: 4px; right: 4px; bottom: 4px; background: #fff; border-radius: 6px; padding: 6px; max-height: 80%; }
+  .sheet-card .grab { width: 14px; height: 2px; border-radius: 99px; background: rgba(0,0,0,0.2); margin: 0 auto 4px; }
+  .sheet-card .t { font-size: 6px; font-weight: 600; text-align: center; }
+  .sheet-card .desc { font-size: 4.5px; color: var(--muted); text-align: center; margin-top: 2px; }
+  .sheet-slots { display: flex; gap: 3px; justify-content: center; margin-top: 4px; }
+  .sheet-slot { width: 12px; height: 12px; border-radius: 3px; background: #f1f1f3; color: #c5c5c7; font-size: 6px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .sheet-slot.f { background: var(--text); color: #fff; }
+  .sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 4px; }
+  .sheet-grid .img { height: 9px; border-radius: 2px; position: relative; }
+  .sheet-grid .img.span { grid-column: span 2; height: 14px; }
+  .sheet-grid .img.sel { outline: 1.5px solid var(--accent); outline-offset: -1px; }
+  .sheet-cta { background: var(--text); color: #fff; padding: 4px; border-radius: 4px; text-align: center; font-size: 5.5px; font-weight: 600; margin-top: 5px; }
+  .sheet-cta.dis { background: #e5e5ea; color: #c5c5c7; }
+
+  /* ── pair search/request atoms ────────────────────────────────── */
+  .scr.search { background: var(--bg); padding: 4px; }
+  .search-input { background: #fff; border-radius: 4px; padding: 3px 4px; font-size: 5px; color: var(--muted); display: flex; align-items: center; gap: 3px; }
+  .search-input.f { color: var(--text); font-weight: 500; }
+  .search-input.f::before { content: '@'; color: var(--accent); }
+  .search-list { background: #fff; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .search-list .h { font-size: 4px; color: var(--muted); letter-spacing: 0.4px; padding: 3px 5px 1px; text-transform: uppercase; font-weight: 700; }
+  .search-item { padding: 3px 5px; display: flex; align-items: center; gap: 3px; border-top: 0.5px solid #e5e5ea; }
+  .search-item .av { width: 11px; height: 11px; border-radius: 999px; flex-shrink: 0; background: linear-gradient(135deg, #c9d6e3, #93a4b6); }
+  .search-item .info { flex: 1; font-size: 4.5px; line-height: 1.25; min-width: 0; }
+  .search-item .info .id { color: var(--muted); font-size: 4px; }
+  .search-pill { font-size: 4px; padding: 1.5px 4px; border-radius: 99px; font-weight: 600; flex-shrink: 0; }
+  .pill-add { background: var(--accent); color: #fff; }
+  .pill-pending { background: #f1f1f3; color: var(--muted); }
+  .pill-ok { background: #e7f7ec; color: #28a745; }
+
+  /* ── request inbox ──────────────────────────────────────────────── */
+  .req-card { background: #fff; border-radius: 6px; padding: 6px; margin: 8px 4px; }
+  .req-card .av { width: 18px; height: 18px; border-radius: 999px; margin: 0 auto; background: linear-gradient(135deg, #dccfd6, #bfa8b3); }
+  .req-card .nm { text-align: center; font-size: 6px; font-weight: 600; margin-top: 3px; }
+  .req-card .id { text-align: center; font-size: 4.5px; color: var(--muted); margin-top: 1px; }
+  .req-card .ms { text-align: center; font-size: 5px; color: var(--text); margin-top: 5px; line-height: 1.3; }
+  .req-actions { display: flex; gap: 3px; margin-top: 5px; }
+  .req-actions .btn { flex: 1; padding: 3px; border-radius: 4px; font-size: 5px; text-align: center; font-weight: 600; }
+  .btn-accept { background: var(--accent); color: #fff; }
+  .btn-decline { background: #fff; color: var(--red); border: 0.5px solid var(--red); }
+
+  /* ── toast atom ──────────────────────────────────────────────────── */
+  .tst { position: absolute; left: 50%; transform: translateX(-50%); background: rgba(29,29,31,0.92); color: #fff; padding: 3px 7px; border-radius: 99px; font-size: 5px; font-weight: 500; white-space: nowrap; z-index: 5; }
+  .tst.bot { bottom: 30px; }
+  .tst.top { top: 26px; }
+
+  /* ── email inbox ────────────────────────────────────────────────── */
+  .scr.mail { background: #fff; padding: 4px 3px; }
+  .mail-head { font-size: 8px; font-weight: 700; letter-spacing: -0.3px; padding: 4px 4px 6px; }
+  .mail-item { background: var(--bg); border-radius: 4px; padding: 4px; margin: 0 1px 3px; }
+  .mail-item .from { font-size: 5px; font-weight: 600; display: flex; justify-content: space-between; }
+  .mail-item .from .t { color: var(--muted); font-weight: 400; font-size: 4px; }
+  .mail-item .sub { font-size: 4.5px; margin-top: 1px; line-height: 1.3; }
+  .mail-item .pre { font-size: 4px; color: var(--muted); margin-top: 1px; line-height: 1.3; }
+  .mail-item.open { outline: 1.5px solid var(--accent); outline-offset: -1px; background: rgba(0,122,255,0.05); }
+
+  /* ── reset deep link ────────────────────────────────────────────── */
+  .scr.deeplink { background: #fff; padding: 8px 6px; text-align: center; }
+  .deeplink-h { font-size: 8px; font-weight: 800; letter-spacing: -0.3px; display: block; margin-top: 14px; }
+  .deeplink-p { font-size: 4.5px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .deeplink-form { background: var(--bg); border-radius: 4px; padding: 5px; margin-top: 8px; text-align: left; }
+
+  /* ── disconnect confirm ──────────────────────────────────────────── */
+  .scr.warn { background: #fff; padding: 0; position: relative; }
+  .warn-head { background: var(--red); height: 32px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; }
+  .warn-head .ic { width: 16px; height: 16px; border-radius: 999px; background: rgba(255,255,255,0.25); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .warn-body { padding: 6px 5px; text-align: center; }
+  .warn-h { font-size: 7px; font-weight: 700; letter-spacing: -0.3px; display: block; }
+  .warn-p { font-size: 4.5px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .warn-cta { background: var(--red); color: #fff; padding: 4px; border-radius: 4px; font-size: 5.5px; font-weight: 600; text-align: center; margin-top: 6px; }
+  .warn-alt { font-size: 5px; color: var(--accent); margin-top: 4px; }
+
+  /* ── profile edit ───────────────────────────────────────────────────── */
+  .scr.prof { background: var(--bg); padding: 4px; }
+  .prof-av { width: 28px; height: 28px; border-radius: 999px; background: linear-gradient(135deg, #c7d2dd, #93a4b6); margin: 12px auto 6px; }
+  .prof-grp { background: #fff; border-radius: 4px; overflow: hidden; }
+  .prof-row { padding: 4px 5px; border-top: 0.5px solid #e5e5ea; font-size: 5px; }
+  .prof-row:first-child { border-top: none; }
+  .prof-row .lbl { color: var(--muted); font-size: 4px; }
+  .prof-row .val { font-weight: 500; margin-top: 1px; }
+  .prof-row.act { background: rgba(0,122,255,0.05); outline: 1.5px solid var(--accent); outline-offset: -1px; }
+  .kbd { position: absolute; left: 0; right: 0; bottom: 0; background: #d1d3d9; padding: 4px 3px; display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; }
+  .kbd .k { background: #fff; border-radius: 2px; height: 8px; }
+
+  /* phone screen layouts (reusable atoms) */
+  .scr {
+    position: absolute; left: 0; right: 0; top: 12px; bottom: 0;
+    padding: 4px 5px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  /* feed atom */
+  .scr.feed { background: var(--bg); }
+  .feed-h { font-weight: 800; font-size: 9px; letter-spacing: -0.4px; }
+  .feed-h .d { color: var(--red); font-size: 5px; font-weight: 700; letter-spacing: 1px; }
+  .feed-hero {
+    height: 38px; border-radius: 4px; margin-top: 3px;
+    background: repeating-linear-gradient(135deg, #dbe5d3 0 4px, #c8d2c0 4px 8px);
+    position: relative;
+  }
+  .feed-card {
+    display: flex; gap: 3px; align-items: flex-start;
+    background: #fff; padding: 3px; border-radius: 3px;
+    margin-top: 3px;
+    position: relative;
+  }
+  .feed-card .tx { flex: 1; font-size: 4.5px; font-weight: 600; line-height: 1.25; }
+  .feed-card .im { width: 18px; height: 18px; border-radius: 2px; flex-shrink: 0; }
+  .badge {
+    position: absolute; top: -3px; left: -3px;
+    width: 11px; height: 11px; border-radius: 999px;
+    background: var(--red); color: #fff;
+    font-size: 6px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 4;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
+  .badge.done {
+    background: var(--green);
+  }
+
+  /* article atom */
+  .scr.art { background: #fff; padding: 0; }
+  .art-hero {
+    height: 60px;
+    background: repeating-linear-gradient(135deg, #ece2d1 0 4px, #dcd2c0 4px 8px);
+  }
+  .art-body { padding: 5px; }
+  .art-cat { font-size: 4.5px; color: var(--accent); font-weight: 700; letter-spacing: 0.7px; }
+  .art-ttl { font-size: 7px; font-weight: 800; line-height: 1.15; margin-top: 2px; letter-spacing: -0.2px; }
+  .art-par { height: 2.5px; margin-top: 3px; background: #e5e5ea; border-radius: 1px; }
+  .art-par.s { width: 70%; }
+  .back {
+    position: absolute; top: 14px; left: 6px;
+    color: var(--accent); font-size: 8px; font-weight: 600;
+    z-index: 3;
+  }
+
+  /* chat atom */
+  .scr.chat { background: #fff; padding: 4px 4px 0; }
+  .chat-pin {
+    background: var(--bg); padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 4.5px; font-weight: 600; color: #515154;
+    line-height: 1.25;
+  }
+  .chat-time {
+    text-align: center;
+    font-size: 4px; color: var(--muted);
+    margin-top: 4px;
+  }
+  .bub {
+    margin-top: 3px; padding: 2.5px 5px;
+    font-size: 5px; border-radius: 6px;
+    max-width: 70%; line-height: 1.3;
+  }
+  .bub.peer { background: #e9e9eb; color: var(--text); }
+  .bub.me { background: var(--accent); color: #fff; margin-left: auto; }
+  .chat-input {
+    position: absolute; left: 4px; right: 4px; bottom: 4px;
+    background: var(--bg); border-radius: 4px;
+    padding: 3px 4px;
+    font-size: 4.5px; color: var(--muted);
+    display: flex; align-items: center; gap: 3px;
+  }
+  .chat-input .plus {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: #d4d4d8;
+    color: #fff; font-size: 7px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 0;
+  }
+
+  /* lock screen atom */
+  .scr.lock {
+    background: radial-gradient(circle at 30% 0%, #3a4d6b 0%, #1a2238 45%, #0b0f1f 100%);
+    color: #fff;
+  }
+  .lock-time {
+    text-align: center;
+    font-size: 22px; font-weight: 300; letter-spacing: -1px;
+    margin-top: 36px; font-family: -apple-system, "SF Pro Display", sans-serif;
+  }
+  .lock-date { text-align: center; font-size: 5.5px; opacity: 0.85; margin-top: 2px; }
+  .lock-notif {
+    margin: 14px 4px 0;
+    background: rgba(255,255,255,0.18);
+    border-radius: 4px;
+    padding: 3px 4px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .lock-notif .app {
+    font-size: 4.5px; font-weight: 600; letter-spacing: 0.4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lock-notif .ttl { font-size: 6px; font-weight: 600; margin-top: 1px; }
+  .lock-notif .bod { font-size: 5.5px; line-height: 1.3; margin-top: 1px; }
+  .lock-notif .src { font-size: 4px; opacity: 0.7; margin-top: 2px; letter-spacing: 0.4px; text-transform: uppercase; font-weight: 600; }
+
+  /* sharesheet atom */
+  .scr.share {
+    background: rgba(0,0,0,0.4);
+  }
+  .share-sheet {
+    position: absolute; left: 4px; right: 4px; bottom: 4px;
+    background: #f0f0f3;
+    border-radius: 8px;
+    padding: 6px;
+  }
+  .share-sheet .h {
+    text-align: center;
+    font-size: 5px; font-weight: 600;
+    padding-bottom: 4px;
+    color: var(--muted);
+  }
+  .share-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  }
+  .share-grid .src {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: repeating-linear-gradient(135deg, #d3dde6 0 3px, #c0ced8 3px 6px);
+    position: relative;
+  }
+  .share-grid .src.sel::after {
+    content: '✓';
+    position: absolute; top: 1px; right: 2px;
+    width: 7px; height: 7px; border-radius: 999px;
+    background: var(--accent); color: #fff;
+    font-size: 5px; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* annotation positions per flow */
+  .tap-spot { position: absolute; z-index: 6; }
+
+  /* arrow above frames */
+  .frame-bridge {
+    position: absolute;
+    top: 50%; left: 100%;
+    width: 18px; height: 2px;
+    background: var(--accent);
+    transform: translateY(-50%);
+    z-index: 3;
+  }
+  .frame-bridge::after {
+    content: '';
+    position: absolute; right: -1px; top: 50%;
+    width: 8px; height: 8px;
+    border-top: 2px solid var(--accent);
+    border-right: 2px solid var(--accent);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .frame:not(:last-child) > .frame-bridge { display: block; }
+
+  /* outcomes */
+  .outcome {
+    margin-top: 24px;
+    padding: 18px 22px;
+    background: var(--text); color: #fff;
+    border-radius: 14px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center;
+  }
+  .outcome .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.6px;
+    color: rgba(255,255,255,0.55); text-transform: uppercase;
+  }
+  .outcome .result {
+    font-size: 15px; font-weight: 500; letter-spacing: -0.2px;
+  }
+  .outcome .result b { color: #fff; font-weight: 700; }
+  .outcome .check {
+    width: 28px; height: 28px; border-radius: 999px;
+    background: var(--green); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px;
+  }
+
+  /* footer */
+  footer.foot {
+    margin-top: 72px; padding-top: 22px;
+    border-top: 0.5px solid var(--line);
+    font-size: 12px; color: var(--muted);
+    text-align: center;
+  }
+  footer.foot a { color: var(--accent); text-decoration: none; }
+
+  /* responsive — collapse strips */
+  @media (max-width: 1100px) {
+    .strip.cols-5,
+    .strip.cols-4,
+    .strip.cols-6 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .flow-head { grid-template-columns: 60px 1fr; }
+    .flow-meta { display: none; }
+    .flow-num { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── HEADER ── -->
+  <header class="page">
+    <div class="codename">Codename · agentNews · Storyboards · MVP</div>
+    <h1>5 핵심 플로우</h1>
+    <p>
+      DailyNews 위장 앱의 MVP 사용자 여정 — 진입 / 알림 / 첨부 / 가입 / 프로필 — 을 각 단계의 사용자 행동, 화면 상태, 시스템 응답으로 분해했습니다. 빨간 원은 사용자 탭, 파란 화살표는 전이.
+    </p>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--red)"></span> User tap</span>
+      <span><span class="swatch" style="background:var(--accent)"></span> Transition</span>
+      <span><span class="swatch" style="background:var(--green)"></span> System OK</span>
+      <span><span class="swatch" style="background:var(--text)"></span> Outcome</span>
+    </div>
+  </header>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- FLOW 1 — 위장 진입 (2-step: ARM + 시퀀스)                          -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="flow">
+    <div class="flow-head">
+      <div class="flow-num">01</div>
+      <div class="flow-title">
+        <div class="scn">SCN-002 Happy · 8 frames · 2-step</div>
+        <h2>위장 진입 — DailyNews 워드마크 ARM + 5 → 3 → 1 → 7</h2>
+        <p>먼저 <b>DailyNews 워드마크를 탭해 ARM</b>. 이전엔 카드를 아무리 눌러도 평범한 기사 열기만 된다. ARM 후 8초 내에 5→3→1→7 시퀀스 입력.</p>
+      </div>
+      <div class="flow-meta">
+        <div><b>Step 1</b> · ARM (워드마크)</div>
+        <div><b>Step 2</b> · 시퀀스 (4 tap)</div>
+        <div><b>Timeout</b> · 8s</div>
+      </div>
+    </div>
+
+    <div class="strip cols-4w">
+
+      <!-- Frame 1 — feed, disarmed -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">1</div>
+          <div class="frame-tag">disarmed</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px">기본 상태<br/><b>armed = false</b></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">view</span>NewsFeedScreen 열림</div>
+          <div class="frame-state">시퀀스 트래커 비활성. 카드 탭은 일반 기사 열기로 라우트.</div>
+        </div>
+      </div>
+
+      <!-- Frame 2 — disguise default: normal card tap -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">2</div>
+          <div class="frame-tag danger">DISGUISE</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr art">
+              <div class="back">‹ 피드</div>
+              <div class="art-hero" style="background:repeating-linear-gradient(135deg,#d3dde6 0 4px,#c1cad3 4px 8px)"></div>
+              <div class="art-body">
+                <div class="art-cat">TECH · 기술</div>
+                <div class="art-ttl">신형 EV 배터리, 8분 충전 512km 검증</div>
+                <div class="art-par"></div>
+                <div class="art-par s"></div>
+                <div class="art-par"></div>
+                <div class="art-par"></div>
+                <div class="art-par s"></div>
+              </div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px"><b>일반 기사 열기</b><br/>외부 관찰자에겐<br/>평범한 뉴스 앱 사용</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>아무 카드 탭 (예: #3)</div>
+          <div class="frame-state">disarmed 상태 → <code>ArticleDetailScreen</code> 일반 모드. 시퀀스 영향 0.</div>
+        </div>
+      </div>
+
+      <!-- Frame 3 — back to feed, then tap wordmark to ARM -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">3</div>
+          <div class="frame-tag danger">TAP WORDMARK</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h" style="outline:1.5px solid var(--red);outline-offset:1px;border-radius:3px;padding:1px 2px"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot tap" style="top:18px;right:14px;font-size:8px">TAP — 로고</div>
+          <div class="pulse" style="top:38px;left:46px;width:34px;height:18px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">arm</span>DailyNews 워드마크 탭</div>
+          <div class="frame-state"><code>armed = true</code> · 8초 타이머 시작 · 외관 변화 0 (위장).</div>
+        </div>
+      </div>
+
+      <!-- Frame 4 — ARMED, zero visible feedback (critical disguise) -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">4</div>
+          <div class="frame-tag go">ARMED · 외관 변화 0</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px"><b>토스트 X · 애니메이션 X</b><br/>소리 X · 진동 X<br/>Frame 3 과 동일한 화면</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">wait</span>시퀀스 입력 모드 · 워드마크 탭 직후</div>
+          <div class="frame-state"><b>외관 변화 0</b> · 8초 무입력 시 auto-disarm · 잘못된 시퀀스 reset (모두 silent)</div>
+        </div>
+      </div>
+
+      <!-- Frame 5 — TAP #5 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">5</div>
+          <div class="frame-tag danger">TAP #5</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card" style="outline:1.5px solid var(--red);outline-offset:1px"><div class="badge">5</div><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot tap" style="bottom:34px;right:14px;font-size:8px">TAP — #5</div>
+          <div class="pulse" style="bottom:80px;right:35px;width:22px;height:22px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>5번째 카드 — "폐공장"</div>
+          <div class="frame-state"><code>progress 1/4</code> · 기사 열기 X · 다음 = <code>#3</code></div>
+        </div>
+      </div>
+
+      <!-- Frame 6 — TAP #3 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">6</div>
+          <div class="frame-tag danger">TAP #3</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card" style="outline:1.5px solid var(--red);outline-offset:1px"><div class="badge done">✓</div><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="badge done">✓</div><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot tap" style="top:84px;left:14px;font-size:8px">TAP — #3</div>
+          <div class="pulse" style="top:108px;left:42px;width:22px;height:22px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>3번째 카드 — "EV 배터리"</div>
+          <div class="frame-state"><code>progress 2/4</code> · 다음 = <code>#1 (hero)</code></div>
+        </div>
+      </div>
+
+      <!-- Frame 7 — TAP #1 hero -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">7</div>
+          <div class="frame-tag danger">TAP #1</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero" style="outline:1.5px solid var(--red);outline-offset:1px;position:relative"><div class="badge">1</div></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="badge done">✓</div><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="badge done">✓</div><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot tap" style="top:36px;right:14px;font-size:8px">TAP — #1</div>
+          <div class="pulse" style="top:62px;right:38px;width:22px;height:22px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>Hero — "기후 정상회담"</div>
+          <div class="frame-state"><code>progress 3/4</code> · 다음 = <code>#7</code> 마지막</div>
+        </div>
+      </div>
+
+      <!-- Frame 8 — TAP #7, SWAP -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">8</div>
+          <div class="frame-tag go">SWAP</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr chat">
+              <div style="font-size:5px;font-weight:600;text-align:center;padding-bottom:3px;border-bottom:0.5px solid #e5e5ea;margin-bottom:4px">기사 토론</div>
+              <div class="chat-pin">📰 토론 중 · 폐공장이 복합문화공간으로...</div>
+              <div class="chat-time">오늘 오전 11:48</div>
+              <div class="bub peer">어제 기획안 봤어?</div>
+              <div class="bub me">방향성은 좋더라</div>
+              <div class="bub peer">어떤 부분?</div>
+              <div class="bub me">3번 섹션이 약해</div>
+              <div class="chat-input"><div class="plus">+</div>댓글 입력</div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;left:14px"><b>swap 자체가 유일한 피드백</b><br/>+ unlock_token<br/>토스트 / 애니 0</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">unlock</span>채팅 모드 진입</div>
+          <div class="frame-state"><code>localStorage.dn_unlock = "1"</code> · 헤더 = "기사 토론"</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="outcome">
+      <div class="label">Outcome</div>
+      <div class="result">
+        <b>2단계 위장 · 외관 변화 0.</b> 워드마크 탭 → ARM → 시퀀스 진행 → auto-disarm · 수신/실패/reset 전부 토스트/애니/소리/진동 0. 유일한 외부 신호 = swap 후 메시지 리스트 노출.
+      </div>
+      <div class="check">✓</div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- FLOW 2 — 위장 알림                                                 -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="flow">
+    <div class="flow-head">
+      <div class="flow-num">02</div>
+      <div class="flow-title">
+        <div class="scn">SCN-002 Push · 4 frames</div>
+        <h2>위장 알림 — 헤드라인 only</h2>
+        <p>페어가 메시지를 보내면 위장 헤드라인 푸시. 탭해도 NewsFeed 진입 — 시퀀스는 별도.</p>
+      </div>
+      <div class="flow-meta">
+        <div><b>Trigger</b> · peer message</div>
+        <div><b>Payload</b> · notification only</div>
+        <div><b>Result</b> · feed entry</div>
+      </div>
+    </div>
+
+    <div class="strip cols-4">
+
+      <!-- Frame 1 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">1</div>
+          <div class="frame-tag">서버 ▶ 디바이스</div>
+        </div>
+        <div class="stage" style="background:linear-gradient(180deg,#1a2238,#0b0f1f)">
+          <div class="phone" style="border-color:#000">
+            <div class="notch"></div>
+            <div class="scr lock">
+              <div class="lock-time">9:41</div>
+              <div class="lock-date">수요일, 5월 20일</div>
+              <div class="lock-notif">
+                <div class="app"><span>DAILYNEWS</span><span style="opacity:0.7">방금</span></div>
+                <div class="ttl">📰 새 뉴스</div>
+                <div class="bod">AI 모델 공개 — 안전성 논쟁 가열</div>
+                <div class="src">테크와이어</div>
+              </div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px;color:#1d1d1f">
+            <b>notification</b> payload<br/>only — data 0
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">push</span>잠금화면 알림 도착</div>
+          <div class="frame-state">발신자 / 메시지 본문 미노출. 헤드라인 + 매체만.</div>
+        </div>
+      </div>
+
+      <!-- Frame 2 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">2</div>
+          <div class="frame-tag danger">TAP NOTIF</div>
+        </div>
+        <div class="stage" style="background:linear-gradient(180deg,#1a2238,#0b0f1f)">
+          <div class="phone" style="border-color:#000">
+            <div class="notch"></div>
+            <div class="scr lock">
+              <div class="lock-time">9:41</div>
+              <div class="lock-date">수요일, 5월 20일</div>
+              <div class="lock-notif" style="outline:1.5px solid var(--red);outline-offset:1px;transform:scale(1.04);transition:transform .2s">
+                <div class="app"><span>DAILYNEWS</span><span style="opacity:0.7">방금</span></div>
+                <div class="ttl">📰 새 뉴스</div>
+                <div class="bod">AI 모델 공개 — 안전성 논쟁 가열</div>
+                <div class="src">테크와이어</div>
+              </div>
+            </div>
+          </div>
+          <div class="annot tap" style="top:96px;left:50%;transform:translateX(-50%);font-size:8px">TAP</div>
+          <div class="pulse" style="top:120px;left:50%;transform:translateX(-50%);width:30px;height:30px;margin-left:-15px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>알림 탭</div>
+          <div class="frame-state">cold start 시 <code>getInitialNotification()</code> · warm 시 background → foreground</div>
+        </div>
+      </div>
+
+      <!-- Frame 3 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">3</div>
+          <div class="frame-tag acc">→ NewsFeed</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot note" style="bottom:14px;left:14px">
+            <b>채팅 자동 진입 X</b><br/>일반 피드만 노출
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">land</span>NewsFeedScreen 진입</div>
+          <div class="frame-state">위장 유지 — deep-link으로 채팅 직행 금지. 어깨 너머 관찰 방어.</div>
+        </div>
+      </div>
+
+      <!-- Frame 4 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">4</div>
+          <div class="frame-tag">사용자 결정</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px">5 → 3 → 1 → 7<br/>안전한 곳에서 입력</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">choose</span>읽거나 / 시퀀스 입력</div>
+          <div class="frame-state">사용자가 환경 판단 후 자발적으로 Flow 01 시작 → 채팅 진입</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="outcome">
+      <div class="label">Outcome</div>
+      <div class="result">
+        <b>알림 자체가 위장.</b> 자동 채팅 진입 X — 사용자가 안전한 환경 판단 후 별도 시퀀스. 어깨 너머 / 잠금화면 미리보기 / 알림센터 전부 헤드라인만 노출.
+      </div>
+      <div class="check">✓</div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- FLOW 3 — 첨부                                                       -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="flow">
+    <div class="flow-head">
+      <div class="flow-num">03</div>
+      <div class="flow-title">
+        <div class="scn">SCN-006 · 5 frames</div>
+        <h2>첨부 전송 — OS sharesheet</h2>
+        <p>채팅 모드에서 사진/PDF 첨부. OS sharesheet 호출 → 검증 → 메시지 inline preview.</p>
+      </div>
+      <div class="flow-meta">
+        <div><b>Picker</b> · OS native</div>
+        <div><b>Validation</b> · MIME + 매직바이트</div>
+        <div><b>Render</b> · inline thumb</div>
+      </div>
+    </div>
+
+    <div class="strip cols-5">
+
+      <!-- Frame 1 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">1</div>
+          <div class="frame-tag acc">채팅 모드</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr chat">
+              <div style="font-size:5px;font-weight:600;text-align:center;padding-bottom:3px;border-bottom:0.5px solid #e5e5ea;margin-bottom:4px">기사 토론</div>
+              <div class="chat-pin">📰 토론 중 · 폐공장이 복합문화...</div>
+              <div class="chat-time">오늘 오전 11:48</div>
+              <div class="bub peer">어제 기획안 봤어?</div>
+              <div class="bub me">방향성은 좋더라</div>
+              <div class="bub peer">어떤 부분?</div>
+              <div class="chat-input"><div class="plus">+</div>댓글 입력</div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">view</span>채팅 진행 중</div>
+          <div class="frame-state">입력바 좌측 <code>+</code> 첨부 아이콘 노출</div>
+        </div>
+      </div>
+
+      <!-- Frame 2 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">2</div>
+          <div class="frame-tag danger">TAP +</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr chat">
+              <div style="font-size:5px;font-weight:600;text-align:center;padding-bottom:3px;border-bottom:0.5px solid #e5e5ea;margin-bottom:4px">기사 토론</div>
+              <div class="chat-pin">📰 토론 중 · 폐공장이 복합문화...</div>
+              <div class="chat-time">오늘 오전 11:48</div>
+              <div class="bub peer">어제 기획안 봤어?</div>
+              <div class="bub me">방향성은 좋더라</div>
+              <div class="bub peer">어떤 부분?</div>
+              <div class="chat-input"><div class="plus" style="background:var(--accent)">+</div>댓글 입력</div>
+            </div>
+          </div>
+          <div class="annot tap" style="bottom:38px;left:14px;font-size:8px">TAP +</div>
+          <div class="pulse" style="bottom:24px;left:38px;width:18px;height:18px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>+ 첨부 아이콘</div>
+          <div class="frame-state">RN bridge — <code>react-native-image-picker</code> / <code>document-picker</code> 호출</div>
+        </div>
+      </div>
+
+      <!-- Frame 3 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">3</div>
+          <div class="frame-tag acc">OS sharesheet</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr share">
+              <div class="share-sheet">
+                <div class="h">최근 항목</div>
+                <div class="share-grid">
+                  <div class="src"></div>
+                  <div class="src"></div>
+                  <div class="src"></div>
+                  <div class="src"></div>
+                  <div class="src"></div>
+                  <div class="src"></div>
+                  <div class="src"></div>
+                  <div class="src"></div>
+                </div>
+                <div style="display:flex;justify-content:space-around;margin-top:6px;padding-top:5px;border-top:0.5px solid #d4d4d8">
+                  <div style="font-size:5px;color:var(--accent);font-weight:600">사진</div>
+                  <div style="font-size:5px;color:#86868b">문서</div>
+                  <div style="font-size:5px;color:#86868b">파일</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;left:14px">
+            <b>OS native</b><br/>앱 내 갤러리 X
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">pick</span>사진 / PDF 선택</div>
+          <div class="frame-state">앱은 OS 결과만 받음 — 권한 grant 0 / 메타 누출 0</div>
+        </div>
+      </div>
+
+      <!-- Frame 4 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">4</div>
+          <div class="frame-tag">UPLOADING</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr chat">
+              <div style="font-size:5px;font-weight:600;text-align:center;padding-bottom:3px;border-bottom:0.5px solid #e5e5ea;margin-bottom:4px">기사 토론</div>
+              <div class="chat-pin">📰 토론 중 · 폐공장이 복합문화...</div>
+              <div class="chat-time">오늘 오전 11:48</div>
+              <div class="bub peer">어제 기획안 봤어?</div>
+              <div class="bub me">방향성은 좋더라</div>
+              <div class="bub peer">어떤 부분?</div>
+              <!-- composer with attachment chip -->
+              <div style="position:absolute;left:4px;right:4px;bottom:4px;background:#fff;border:0.5px solid #e5e5ea;border-radius:5px;padding:4px">
+                <div style="height:30px;border-radius:3px;background:repeating-linear-gradient(135deg,#d3dde6 0 4px,#c0ced8 4px 8px);position:relative;margin-bottom:3px">
+                  <div style="position:absolute;top:1px;right:2px;background:rgba(0,0,0,0.5);color:#fff;font-size:5px;padding:0 3px;border-radius:99px">×</div>
+                  <div style="position:absolute;bottom:2px;left:3px;background:rgba(0,0,0,0.45);color:#fff;font-size:4px;padding:1px 3px;border-radius:2px;letter-spacing:0.2px">UPLOADING · 62%</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:3px"><div style="flex:1;font-size:4.5px;color:#86868b">댓글 추가</div><div style="width:8px;height:8px;border-radius:99px;background:var(--accent);color:#fff;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center">↑</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px"><b>3중 검증</b><br/>MIME · 매직바이트<br/>· 확장자</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">post</span>POST /attachments</div>
+          <div class="frame-state">multipart 업로드 → <code>status=AVAILABLE</code> 까지 진행률 표시</div>
+        </div>
+      </div>
+
+      <!-- Frame 5 -->
+      <div class="frame">
+        <div class="frame-head">
+          <div class="frame-num">5</div>
+          <div class="frame-tag go">DELIVERED</div>
+        </div>
+        <div class="stage">
+          <div class="phone">
+            <div class="notch"></div>
+            <div class="scr chat">
+              <div style="font-size:5px;font-weight:600;text-align:center;padding-bottom:3px;border-bottom:0.5px solid #e5e5ea;margin-bottom:4px">기사 토론</div>
+              <div class="chat-pin">📰 토론 중 · 폐공장이 복합문화...</div>
+              <div class="chat-time">오늘 오전 11:48</div>
+              <div class="bub peer">어떤 부분?</div>
+              <!-- inline preview bubble -->
+              <div class="bub me" style="padding:2px;background:var(--accent);max-width:75%">
+                <div style="border-radius:5px;overflow:hidden;height:34px;background:repeating-linear-gradient(135deg,#d3dde6 0 4px,#c0ced8 4px 8px)"></div>
+                <div style="font-size:4.5px;color:#fff;padding:2px 3px 1px;line-height:1.3">참고 이미지 첨부했어</div>
+              </div>
+              <div class="bub me">내일 카페에서 볼래?</div>
+              <div class="chat-input"><div class="plus">+</div>댓글 입력</div>
+            </div>
+          </div>
+          <div class="annot note" style="bottom:14px;right:14px">
+            <b>inline preview</b><br/>200×200 cap · r12<br/>탭 → OS 뷰어
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">render</span>메시지 버블 inline</div>
+          <div class="frame-state">이미지 thumbnail · PDF는 아이콘 + 파일명 + 크기. 페어에게 위장 푸시 발송.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="outcome">
+      <div class="label">Outcome</div>
+      <div class="result">
+        <b>첨부 inline preview 전송 완료.</b> OS native picker 만 사용 → 앱 권한 grant 없음. 검증 3중 (MIME · 매직바이트 · 확장자). 페어에게 동일하게 위장 푸시.
+      </div>
+      <div class="check">✓</div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- FLOW 4 — 회원가입 (MVP — 잠금 코드 DB 직접 관리)                       -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="flow">
+    <div class="flow-head">
+      <div class="flow-num">04</div>
+      <div class="flow-title">
+        <div class="scn">Onboarding · 3 frames · MVP</div>
+        <h2>회원가입 — 이메일 + 비밀번호</h2>
+        <p>MVP 계정 생성은 간단한 이메일 + 비밀번호. <b>잠금 코드(5→3→1→7)는 DB에서 직접 관리</b> — 앱 내 설정 UI 없음. 페어(1:1)도 동일하게 DB로 관리.</p>
+      </div>
+      <div class="flow-meta">
+        <div><b>Auth</b> · email + pw</div>
+        <div><b>잠금 코드</b> · DB 관리</div>
+        <div><b>페어</b> · DB 관리 (1:1)</div>
+      </div>
+    </div>
+
+    <div class="strip cols-3">
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">1</div><div class="frame-tag">LoginScreen</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr auth">
+              <div class="auth-logo">DailyNews</div>
+              <div class="auth-sub">매일의 뉴스를 한 곳에서</div>
+              <div class="auth-field">이메일</div>
+              <div class="auth-field">비밀번호</div>
+              <div class="auth-cta">로그인</div>
+              <div style="display:flex;gap:8px;margin-top:6px"><div class="auth-link" style="color:var(--muted)">비밀번호 찾기</div><div class="auth-link" style="color:var(--red);font-weight:600;outline:1px solid var(--red);border-radius:99px;padding:1px 6px">회원가입</div></div>
+            </div>
+          </div>
+          <div class="annot tap" style="bottom:30px;right:14px;font-size:8px">TAP — 회원가입</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">view</span>로그인 화면</div>
+          <div class="frame-state">미인증 진입점. chat / secret 어휘 0.</div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">2</div><div class="frame-tag">RegisterScreen</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr auth">
+              <div class="auth-logo" style="font-size:9px;margin-top:10px">회원가입</div>
+              <div class="auth-sub">DailyNews 계정 만들기</div>
+              <div class="auth-field filled">jun@daily.com</div>
+              <div class="auth-field filled">junkyu_2026</div>
+              <div class="auth-field">비밀번호 (8자 이상)</div>
+              <div class="auth-field">비밀번호 확인</div>
+              <div class="auth-cta">계정 만들기</div>
+              <div class="auth-link" style="font-size:4px;margin-top:8px;color:var(--muted);text-align:center;line-height:1.4">계정을 만들면 이용약관 및<br/>개인정보 처리방침에 동의합니다</div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">submit</span>이메일 + ID + 비밀번호</div>
+          <div class="frame-state">서버 → <code>POST /auth/register</code> · ID 중복 검증</div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">3</div><div class="frame-tag go">앱 진입</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr feed">
+              <div class="feed-h"><div class="d">5월 20일</div>DailyNews</div>
+              <div class="feed-hero"></div>
+              <div class="feed-card"><div class="tx">한국은행 기준금리 동결</div><div class="im" style="background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">신형 EV 배터리 8분 충전</div><div class="im" style="background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">K-드라마 OTT 1위</div><div class="im" style="background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div></div>
+              <div class="feed-card"><div class="tx">폐공장이 복합문화공간으로</div><div class="im" style="background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div></div>
+            </div>
+            <div class="tst bot">환영합니다</div>
+          </div>
+          <div class="annot note" style="top:14px;right:14px"><b>MVP</b> · 잠금 코드<br/>UI 없음 — DB에<br/>관리자가 상수 등록</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">land</span>NewsFeedScreen 진입</div>
+          <div class="frame-state">잠금 코드(5→3→1→7)는 서버 상수. 가입 즉시 사용 가능.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="outcome">
+      <div class="label">Outcome · MVP</div>
+      <div class="result">
+        <b>계정 생성 완료.</b> 앱 내 잠금 코드 설정 UI 없음 — 관리자가 DB에 상수 박아서 임베딩. 페어(1:1)도 동일하게 DB 관리.
+      </div>
+      <div class="check">✓</div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- FLOW 5 — 프로필 편집 + 데이터 삭제                                    -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <section class="flow">
+    <div class="flow-head">
+      <div class="flow-num">05</div>
+      <div class="flow-title">
+        <div class="scn">ProfileEdit + DataDelete · 4 frames · MVP</div>
+        <h2>프로필 편집 — 닉네임 변경 + 데이터 삭제</h2>
+        <p>닉네임은 즉시 변경. 사용자 ID는 read-only. <b>"데이터 삭제"</b> 버튼은 계정 + 메시지 + 첨부 모두 영구 삭제 (구독자 해제 기능 통합).</p>
+      </div>
+      <div class="flow-meta">
+        <div><b>닉네임</b> · 즉시</div>
+        <div><b>ID</b> · 고정</div>
+        <div><b>데이터 삭제</b> · 영구</div>
+      </div>
+    </div>
+
+    <div class="strip cols-4">
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">1</div><div class="frame-tag">Settings</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr settings">
+              <div class="set-prof"><div class="av"></div><div class="info"><b>전준규</b><br/>@junkyu_2026</div></div>
+              <div class="set-grp">
+                <div class="h">계정</div>
+                <div class="set-row sel"><div class="ic" style="background:#8e8e93"></div>프로필 편집<span class="chev">›</span></div>
+                <div class="set-row"><div class="ic" style="background:#5856d6"></div>비밀번호 변경<span class="chev">›</span></div>
+                <div class="set-row"><div class="ic" style="background:#34c759"></div>이메일 변경<span class="det">ju***</span><span class="chev">›</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="annot tap" style="bottom:84px;right:14px;font-size:7px">TAP</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>프로필 편집</div>
+          <div class="frame-state">ProfileEditScreen 이동</div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">2</div><div class="frame-tag">ProfileEditScreen</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr prof">
+              <div style="font-size:5.5px;font-weight:600;text-align:center;padding:3px">프로필 편집</div>
+              <div class="prof-av" style="position:relative">
+                <div style="position:absolute;right:-2px;bottom:0px;width:9px;height:9px;border-radius:99px;background:var(--accent);color:#fff;font-size:5px;font-weight:700;display:flex;align-items:center;justify-content:center">+</div>
+              </div>
+              <div class="prof-grp">
+                <div class="prof-row act"><div class="lbl">닉네임</div><div class="val">전준규</div></div>
+                <div class="prof-row"><div class="lbl">사용자 ID</div><div class="val" style="color:var(--muted)">@junkyu_2026 (고정)</div></div>
+                <div class="prof-row"><div class="lbl">상태 메시지</div><div class="val" style="color:var(--muted)">없음</div></div>
+              </div>
+              <div style="margin-top:10px;background:#fff;border-radius:4px;overflow:hidden">
+                <div class="prof-row" style="color:var(--red);font-weight:600;text-align:center;padding:6px">데이터 삭제</div>
+              </div>
+              <div style="font-size:4px;color:var(--muted);text-align:center;margin-top:3px;line-height:1.4;padding:0 6px">계정 + 메시지 + 첨부<br/>모든 데이터가 영구 삭제됩니다</div>
+            </div>
+          </div>
+          <div class="annot tap" style="bottom:46px;right:14px;font-size:7px">TAP — 데이터 삭제</div>
+          <div class="pulse" style="bottom:62px;right:30px;width:20px;height:20px"></div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">tap</span>데이터 삭제 버튼</div>
+          <div class="frame-state">닉네임 변경 위 + 데이터 삭제 행 분리. 빨간 색 라벨로 위험 신호.</div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">3</div><div class="frame-tag danger">경고</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr warn">
+              <div class="warn-head"><div class="ic">!</div></div>
+              <div class="warn-body">
+                <div class="warn-h">모든 데이터를 삭제하시겠어요?</div>
+                <div class="warn-p" style="margin-top:4px;text-align:left;padding:0 4px">• 계정 영구 삭제<br/>• 모든 메시지 + 첨부 삭제<br/>• 페어 연결 자동 해제<br/>• 복구 불가능</div>
+                <div class="auth-field filled" style="margin-top:8px;text-align:left">삭제</div>
+                <div class="warn-cta" style="outline:1.5px solid var(--red);outline-offset:1px">데이터 삭제</div>
+                <div class="warn-alt">취소</div>
+              </div>
+            </div>
+          </div>
+          <div class="annot note" style="top:14px;left:14px">"삭제" 단어<br/>입력해야<br/>CTA 활성</div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">confirm</span>"삭제" 입력 + 버튼 탭</div>
+          <div class="frame-state"><code>DELETE /users/me</code> · cascade — 메시지 / 첨부 / 페어 일괄 삭제</div>
+        </div>
+      </div>
+
+      <div class="frame">
+        <div class="frame-head"><div class="frame-num">4</div><div class="frame-tag go">로그아웃</div></div>
+        <div class="stage">
+          <div class="phone"><div class="notch"></div>
+            <div class="scr auth">
+              <div class="auth-logo">DailyNews</div>
+              <div class="auth-sub" style="margin-top:8px">계정이 삭제되었습니다</div>
+              <div style="background:#fff2f1;color:var(--red);font-size:5px;padding:4px 8px;border-radius:99px;margin-top:8px;font-weight:600">✓ 데이터 완전 삭제됨</div>
+              <div class="auth-field">이메일</div>
+              <div class="auth-field">비밀번호</div>
+              <div class="auth-cta">로그인</div>
+            </div>
+          </div>
+        </div>
+        <div class="frame-body">
+          <div class="frame-action"><span class="verb">land</span>LoginScreen 복귀</div>
+          <div class="frame-state">계정 / 메시지 / 첨부 / 페어 영구 삭제 완료. 같은 이메일로 신규 가입 가능.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="outcome">
+      <div class="label">Outcome · MVP</div>
+      <div class="result">
+        <b>계정 + 전체 데이터 영구 삭제.</b> 별도 "구독자 해제" UI 없음 — 데이터 삭제로 통합. 페어 연결도 자동 해제.
+      </div>
+      <div class="check">✓</div>
+    </div>
+  </section>
+
+
+  <footer class="foot">
+    <span>DailyNews Storyboards · codename agentNews · MVP · 5 flows / 24 frames · <a href="index.html">← Mockup Index</a></span>
+  </footer>
+
+</div>
+
+</body>
+</html>

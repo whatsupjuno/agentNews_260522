@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — Feed</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #ececef 0%, transparent 60%),
+      #e6e6ea;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .stage {
+    display: flex; align-items: center; justify-content: center;
+    gap: 32px;
+    padding: 40px;
+  }
+  .caption {
+    max-width: 280px;
+    color: #515154;
+    font-size: 13px; line-height: 1.55;
+  }
+  .caption .eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; color: #86868b;
+    margin-bottom: 8px;
+  }
+  .caption h1 {
+    margin: 0 0 8px; font-size: 22px; font-weight: 700;
+    letter-spacing: -0.4px; color: #1d1d1f;
+  }
+  .caption ul {
+    list-style: none; padding: 0; margin: 12px 0 0;
+    font-size: 12px; color: #6e6e73;
+  }
+  .caption li { padding: 4px 0; border-top: 0.5px solid rgba(0,0,0,0.08); }
+  .caption li:first-child { border-top: none; }
+  .caption li b { color: #1d1d1f; font-weight: 600; }
+  .hint {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    font-size: 11.5px; line-height: 1.5;
+    color: #515154;
+  }
+  .hint b { color: #007aff; }
+  .hint code {
+    background: #f5f5f7; padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+  }
+
+  @keyframes dn-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes dn-toast-in {
+    from { transform: translate(-50%, 8px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  /* hide horizontal scrollbar on category strip */
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <aside class="caption">
+    <div class="eyebrow">Artifact 01 / 06</div>
+    <h1>NewsFeedScreen</h1>
+    <p>위장 뉴스 피드. Hero 1개 + 6개 카드, pull-to-refresh, 카테고리 칩, 하단 탭바.</p>
+    <p style="margin-top:8px">디자인 토큰은 brief 그대로 — #f5f5f7 / #007aff / 12·14·16 radius / SF Pro stack.</p>
+    <ul>
+      <li><b>Frame</b> · iPhone 14 — 390 × 844</li>
+      <li><b>탭 가능</b> · 모든 카드</li>
+      <li><b>Pull</b> · 위에서 아래로 드래그</li>
+      <li><b>위장</b> · "chat / secret / agent" 단어 0</li>
+    </ul>
+    <div class="hint">
+      <b>2단계 위장</b>:<br/>
+      ① <b>DailyNews</b> 워드마크 탭 → ARM (8초간, <b>외관 변화 0</b>)<br/>
+      ② <b>5 → 3 → 1 → 7</b> 순서로 카드 탭 → unlock<br/>
+      ARM 안 한 상태에서 카드 탭 → 일반 기사 열기.<br/>
+      <b>모든 ARM/시퀀스 단계 토스트/애니/소리/진동 0.</b><br/>
+      <code>D</code> 키 = 개발자용 상태 패널 (위장 영향 X).
+    </div>
+  </aside>
+
+  <div id="device-root"></div>
+</div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="screens/news-feed-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react" data-screen-label="01 NewsFeed">
+  const { useEffect } = React;
+
+  function App() {
+    return (
+      <IOSDevice width={390} height={844}>
+        <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }}>
+          <NewsFeedScreen />
+        </div>
+      </IOSDevice>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('device-root')).render(<App />);
+</script>
+
+</body>
+</html>
