@@ -6,3 +6,4 @@ export * from './types/attachment';
 export * from './types/notification';
 export * from './constants/status';
 export * from './constants/error-codes';
+export * from './constants/disguise';

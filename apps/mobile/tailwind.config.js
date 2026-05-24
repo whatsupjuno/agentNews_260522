@@ -1,30 +1,69 @@
 /** @type {import('tailwindcss').Config} */
+// Design Handoff v2 §6 디자인 토큰 1:1 매핑. SF Pro / 8pt grid / Apple HIG iOS 17 풍.
 module.exports = {
   content: ['./App.tsx', './src/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
       colors: {
-        // Apple HIG iOS 17 풍 — design-brief §5
         bg: '#f5f5f7',
         surface: '#ffffff',
+        bgInverse: '#1d1d1f',
+        text: '#1d1d1f',
         textPrimary: '#1d1d1f',
         textSecondary: '#86868b',
+        muted: '#86868b',
+        inverse: '#ffffff',
         accent: '#007aff',
+        red: '#ff3b30',
+        danger: '#ff3b30',
+        green: '#34c759',
         success: '#34c759',
+        orange: '#ff9500',
         warning: '#ff9500',
-        danger: '#ff453a',
+        purple: '#af52de',
         bubbleMe: '#007aff',
+        bubbleMeFg: '#ffffff',
         bubblePeer: '#e9e9eb',
+        bubblePeerFg: '#1d1d1f',
+        separator: 'rgba(60,60,67,0.12)',
+        chip: '#f1f1f3',
+        // iOS settings row icon bg palette
+        iconGray: '#8e8e93',
+        iconPurple: '#5856d6',
+        iconGreen: '#34c759',
+        iconRed: '#ff453a',
+        iconCyan: '#5ac8fa',
       },
       borderRadius: {
+        none: '0',
+        sm: '4px',
+        md: '8px',
         card: '12px',
+        cardLg: '14px',
         modal: '18px',
         bubble: '22px',
+        pill: '9999px',
+      },
+      spacing: {
+        '4.5': '18px',
       },
       fontFamily: {
-        sf: ['"SF Pro Text"', 'system-ui', 'sans-serif'],
-        sfDisplay: ['"SF Pro Display"', 'system-ui', 'sans-serif'],
+        sf: ['SF Pro Text', 'system-ui', 'sans-serif'],
+        sfDisplay: ['SF Pro Display', 'system-ui', 'sans-serif'],
+        sfMono: ['SF Mono', 'Menlo', 'monospace'],
+      },
+      fontSize: {
+        // Design tokens (size / lineHeight ratio)
+        displayXxl: ['34px', { lineHeight: '34px', letterSpacing: '-1.1px', fontWeight: '800' }],
+        displayXl: ['28px', { lineHeight: '33px', letterSpacing: '-0.6px', fontWeight: '800' }],
+        displayLg: ['22px', { lineHeight: '27px', letterSpacing: '-0.4px', fontWeight: '700' }],
+        bodyLg: ['17px', { lineHeight: '22px', letterSpacing: '-0.4px' }],
+        body: ['16px', { lineHeight: '24px', letterSpacing: '-0.2px' }],
+        bodySm: ['15px', { lineHeight: '21px', letterSpacing: '-0.2px', fontWeight: '500' }],
+        eyebrow: ['11px', { lineHeight: '13px', letterSpacing: '1.4px', fontWeight: '700' }],
+        caption: ['12px', { lineHeight: '14px', letterSpacing: '0px', fontWeight: '500' }],
+        mono: ['12px', { lineHeight: '14px', letterSpacing: '0.2px', fontWeight: '500' }],
       },
     },
   },

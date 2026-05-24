@@ -1,75 +1,287 @@
-import { FlatList, Pressable, Text, View, Image } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
+import { apiFetch } from '../services/api';
+import { useAuth } from '../store/auth';
+import { useFeedSequence } from '../hooks/useFeedSequence';
 
-// SCR-010 뉴스 피드 — REQ-004, REQ-005, REQ-024
-// 위장 진입점: 1·3·5·7번 카드 탭 순서가 시퀀스에 매칭되면 unlock_token 발급 → ArticleDetail 채팅 swap
+// SCR-010 NewsFeedScreen — handoff §8.3 + jsx
 type Props = NativeStackScreenProps<RootStackParamList, 'NewsFeed'>;
 
-interface Article {
+interface FeedArticle {
   id: string;
   feedIndex: number;
+  kind: 'hero' | 'standard';
+  eyebrow: string;
+  category: string;
   title: string;
+  summary?: string;
   source: string;
   publishedAgo: string;
-  thumbnail?: string;
+  tone: { bg: string; fg: string; label: string };
 }
 
-const MOCK_ARTICLES: Article[] = [
-  { id: 'a1', feedIndex: 1, title: 'AI 모델 공개 — 안전성 논쟁 가열', source: '연합뉴스', publishedAgo: '3분 전' },
-  { id: 'a2', feedIndex: 2, title: '00 정상회담 합의 도출', source: '한겨레', publishedAgo: '12분 전' },
-  { id: 'a3', feedIndex: 3, title: '국내 IT 대기업 실적 발표', source: '매일경제', publishedAgo: '1시간 전' },
-  { id: 'a4', feedIndex: 4, title: '기후변화 보고서 핵심', source: 'KBS', publishedAgo: '2시간 전' },
-  { id: 'a5', feedIndex: 5, title: '문화재 발굴 현장 공개', source: 'MBC', publishedAgo: '3시간 전' },
-  { id: 'a6', feedIndex: 6, title: '스타트업 투자 동향', source: '조선비즈', publishedAgo: '4시간 전' },
-  { id: 'a7', feedIndex: 7, title: '신간 도서 리뷰', source: '경향신문', publishedAgo: '5시간 전' },
-];
+const CATEGORIES = ['헤드라인', '정치', '경제', '기술', '문화', '스포츠', '사회'];
 
 export function NewsFeedScreen({ navigation }: Props) {
+  const auth = useAuth();
+  const seq = useFeedSequence();
+  const [articles, setArticles] = useState<FeedArticle[]>([]);
+  const [activeCategory, setActiveCategory] = useState('헤드라인');
+  const [refreshing, setRefreshing] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<string>('');
+
+  const load = useCallback(async () => {
+    const access = await auth.getValidAccessToken();
+    if (!access) return;
+    try {
+      const res = await apiFetch<{ articles: FeedArticle[] }>('/news/feed', { accessToken: access });
+      setArticles(res.articles);
+      setUpdatedAt(
+        new Date().toLocaleTimeString('ko-KR', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }),
+      );
+    } catch {
+      // silent
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
+
+  const handleCardTap = useCallback(
+    async (article: FeedArticle) => {
+      const advanced = await seq.onTapArticle(article.feedIndex);
+      if (advanced) {
+        // 시퀀스 완성 — chat 모드로 진입. 유일한 외부 신호.
+        navigation.navigate('ArticleDetail', { articleId: article.id, mode: 'chat' });
+        return;
+      }
+      // 위장 기본 동작 — armed 여부와 무관하게 일반 기사로 열림.
+      // 단 armed + 정답 진행중인 경우는 advanced=false 라서 카드 열림 X (silent progress).
+      if (seq.state.armed) return;
+      navigation.navigate('ArticleDetail', { articleId: article.id, mode: 'normal' });
+    },
+    [seq, navigation],
+  );
+
+  const hero = articles.find((a) => a.kind === 'hero');
+  const standard = articles.filter((a) => a.kind === 'standard');
+
   return (
-    <SafeAreaView className="flex-1 bg-bg">
-      <View className="px-5 pt-2 pb-3">
-        <Text className="text-3xl font-bold text-textPrimary">오늘의 뉴스</Text>
-      </View>
-      <FlatList
-        data={MOCK_ARTICLES}
-        keyExtractor={(a) => a.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}
-        ItemSeparatorComponent={() => <View className="h-3" />}
-        renderItem={({ item, index }) => (
+    <SafeAreaView edges={['top']} className="flex-1 bg-bg">
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007aff" />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View className="px-5 pt-2 pb-3 flex-row items-end justify-between">
+          <View>
+            <Text className="text-red" style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>
+              5월 25일 · 일요일
+            </Text>
+            <Pressable onPress={seq.onTapWordmark} hitSlop={12}>
+              <Text
+                className="text-text"
+                style={{ fontSize: 34, fontWeight: '800', letterSpacing: -1.1, marginTop: 4 }}
+              >
+                DailyNews
+              </Text>
+            </Pressable>
+          </View>
           <Pressable
-            onPress={() =>
-              navigation.navigate('ArticleDetail', { articleId: item.id, feedIndex: item.feedIndex })
-            }
-            className="bg-surface rounded-card overflow-hidden"
+            onPress={() => navigation.navigate('Settings')}
+            className="w-10 h-10 rounded-pill bg-surface items-center justify-center"
+            style={{ shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } }}
           >
-            {index === 0 ? (
-              <View>
-                <View className="h-44 bg-gray-200" />
-                <View className="p-4">
-                  <Text className="text-xs uppercase text-textSecondary tracking-wider">
-                    {item.source} · {item.publishedAgo}
-                  </Text>
-                  <Text className="text-xl font-bold text-textPrimary mt-1">{item.title}</Text>
-                </View>
-              </View>
-            ) : (
-              <View className="flex-row p-3">
-                <View className="flex-1 pr-3">
-                  <Text className="text-xs uppercase text-textSecondary tracking-wider">
-                    {item.source} · {item.publishedAgo}
-                  </Text>
-                  <Text className="text-base font-semibold text-textPrimary mt-1" numberOfLines={3}>
-                    {item.title}
-                  </Text>
-                </View>
-                <View className="w-24 h-24 bg-gray-200 rounded-lg" />
-              </View>
-            )}
+            <Text style={{ fontSize: 17, fontWeight: '600' }} className="text-text">
+              {auth.user?.nickname?.charAt(0) ?? '?'}
+            </Text>
           </Pressable>
-        )}
-      />
+        </View>
+
+        {/* Category strip */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mb-4"
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+        >
+          {CATEGORIES.map((cat) => {
+            const active = cat === activeCategory;
+            return (
+              <Pressable
+                key={cat}
+                onPress={() => setActiveCategory(cat)}
+                className="rounded-pill"
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  backgroundColor: active ? '#1d1d1f' : '#ffffff',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: active ? '600' : '500',
+                    color: active ? '#ffffff' : '#1d1d1f',
+                  }}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* Hero card */}
+        {hero ? <HeroCard article={hero} onPress={() => handleCardTap(hero)} /> : null}
+
+        {/* Section header */}
+        <View className="flex-row items-end justify-between px-5 mt-6 mb-3">
+          <Text className="text-text" style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3 }}>
+            많이 읽은 기사
+          </Text>
+          <Text className="text-accent" style={{ fontSize: 14, fontWeight: '500' }}>
+            전체 보기
+          </Text>
+        </View>
+
+        {/* Standard cards */}
+        {standard.map((article) => (
+          <StoryCard
+            key={article.id}
+            article={article}
+            onPress={() => handleCardTap(article)}
+          />
+        ))}
+
+        {/* Update timestamp */}
+        {updatedAt ? (
+          <Text className="text-muted text-center mt-6" style={{ fontSize: 12 }}>
+            마지막 업데이트 · {updatedAt}
+          </Text>
+        ) : null}
+      </ScrollView>
+
+      {/* Bottom tab bar (blur 흉내) */}
+      <View
+        className="absolute bottom-0 left-0 right-0 flex-row justify-around bg-surface"
+        style={{
+          paddingTop: 12,
+          paddingBottom: 22,
+          borderTopWidth: 0.5,
+          borderTopColor: 'rgba(60,60,67,0.12)',
+        }}
+      >
+        <TabIcon label="홈" active />
+        <TabIcon label="둘러보기" />
+        <TabIcon label="검색" />
+        <TabIcon label="설정" onPress={() => navigation.navigate('Settings')} />
+      </View>
     </SafeAreaView>
+  );
+}
+
+function HeroCard({ article, onPress }: { article: FeedArticle; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} className="mx-5 bg-surface rounded-card overflow-hidden" style={{ marginBottom: 4 }}>
+      <View style={{ height: 210, backgroundColor: article.tone.bg, justifyContent: 'flex-end', padding: 12 }}>
+        <Text style={{ fontSize: 10, fontWeight: '700', color: article.tone.fg, opacity: 0.6, letterSpacing: 1.4 }}>
+          {article.tone.label}
+        </Text>
+      </View>
+      <View className="p-4">
+        <Text className="text-accent" style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.6 }}>
+          {article.eyebrow.toUpperCase()} · 헤드라인
+        </Text>
+        <Text className="text-text mt-2" style={{ fontSize: 22, fontWeight: '700', letterSpacing: -0.4, lineHeight: 28 }}>
+          {article.title}
+        </Text>
+        {article.summary ? (
+          <Text className="text-muted mt-2" style={{ fontSize: 15, lineHeight: 21 }}>
+            {article.summary}
+          </Text>
+        ) : null}
+        <Text className="text-muted mt-3" style={{ fontSize: 12 }}>
+          {article.source} · {article.publishedAgo}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function StoryCard({ article, onPress }: { article: FeedArticle; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="mx-5 bg-surface rounded-card mt-3 flex-row p-3 items-start"
+    >
+      <View className="flex-1 pr-3">
+        <Text className="text-accent" style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1.4 }}>
+          {article.eyebrow.toUpperCase()}
+        </Text>
+        <Text
+          className="text-text mt-1"
+          style={{ fontSize: 16, fontWeight: '600', lineHeight: 22 }}
+          numberOfLines={3}
+        >
+          {article.title}
+        </Text>
+        <Text className="text-muted mt-2" style={{ fontSize: 12 }}>
+          {article.source} · {article.publishedAgo}
+        </Text>
+      </View>
+      <View
+        style={{
+          width: 96,
+          height: 96,
+          borderRadius: 10,
+          backgroundColor: article.tone.bg,
+        }}
+      />
+    </Pressable>
+  );
+}
+
+function TabIcon({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
+  return (
+    <Pressable onPress={onPress} className="items-center">
+      <View
+        className="w-7 h-7 rounded-md mb-1"
+        style={{ backgroundColor: active ? '#007aff' : '#86868b', opacity: active ? 1 : 0.5 }}
+      />
+      <Text
+        style={{
+          fontSize: 10,
+          fontWeight: active ? '600' : '500',
+          color: active ? '#007aff' : '#86868b',
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }

@@ -9,10 +9,12 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
       type: 'postgres',
-      url: this.config.get<string>('DATABASE_URL'),
+      url:
+        this.config.get<string>('DATABASE_URL') ??
+        'postgresql://agentnews:agentnews_dev@localhost:5432/agentnews',
       autoLoadEntities: true,
-      synchronize: false,
-      logging: this.config.get<string>('NODE_ENV') !== 'production',
+      synchronize: false, // ddl.sql 이 schema 적재. migration 으로 추후 관리.
+      logging: false, // dev 라도 noisy 줄임
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       migrationsRun: false,
     };

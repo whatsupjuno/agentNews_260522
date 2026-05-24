@@ -5,6 +5,7 @@ module.exports = function (api) {
       ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
       'nativewind/babel',
     ],
-    plugins: ['react-native-reanimated/plugin'],
+    // react-native-reanimated/plugin 은 worklets 사용 시에만 필요. 우리는 미사용.
+    plugins: [],
   };
 };
