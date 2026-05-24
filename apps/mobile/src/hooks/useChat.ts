@@ -57,12 +57,19 @@ export function useChat(): UseChatApi {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. WebSocket subscribe — 새 메시지 push 받기
+  // 2. WebSocket subscribe — 새 댓글 push 받기.
+  // unlock token 이 있어야만 연결. 만료/해제 시 즉시 disconnect (위장 복귀).
   useEffect(() => {
-    if (!auth.accessToken) return;
+    if (!auth.accessToken || !unlock.token) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
     const sock = io(WS_BASE, {
       path: '/ws',
-      auth: { token: auth.accessToken },
+      auth: { token: auth.accessToken, unlockToken: unlock.token },
       transports: ['websocket'],
     });
     socketRef.current = sock;
@@ -79,7 +86,7 @@ export function useChat(): UseChatApi {
       sock.disconnect();
       socketRef.current = null;
     };
-  }, [auth.accessToken, auth.user?.externalId]);
+  }, [auth.accessToken, auth.user?.externalId, unlock.token]);
 
   const send = useCallback(
     async (body: string) => {

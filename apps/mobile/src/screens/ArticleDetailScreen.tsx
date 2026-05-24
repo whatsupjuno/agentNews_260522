@@ -42,11 +42,21 @@ export function ArticleDetailScreen({ route, navigation }: Props) {
   const auth = useAuth();
   const [article, setArticle] = useState<Article | null>(null);
 
-  // chat mode = forceMode='chat' 명시 OR unlock 유효
-  const isChat = forceMode === 'chat' || (forceMode !== 'normal' && unlock.isUnlocked());
+  // unlock 살아있을 때만 chat 모드. forceMode='normal' 이면 강제 article view.
+  // 즉 데모/외부 nav 의 mode 파라미터 무관하게 실제 잠금 상태만이 진입 조건 (handoff §8.4).
+  const isUnlocked = unlock.isUnlocked();
+  const isChat = forceMode === 'normal' ? false : isUnlocked;
 
   // 백그라운드 위장 (채팅 모드 활성 시만)
   const { shouldDisguise } = useBackgroundDisguise(isChat);
+
+  // unlock 만료/해제 → NewsFeed 자동 복귀 (REQ-023 / handoff §8.4).
+  // forceMode='chat' 으로 진입했는데 unlock 사라지면 채팅 화면 보존하지 않고 즉시 복귀.
+  useEffect(() => {
+    if (forceMode === 'chat' && !isUnlocked) {
+      navigation.popToTop();
+    }
+  }, [forceMode, isUnlocked, navigation]);
 
   useLayoutEffect(() => {
     // 위장 검수: route param 의 mode 가 외부에서 deeplink 로 들어올 수 없도록
