@@ -8,11 +8,14 @@
       "distribution": "internal",
       "channel": "development"
     },
-    "staging": {
+    "preview": {
       "distribution": "internal",
-      "channel": "staging",
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "http://CHANGE_ME_STAGING_HOST:3000/api/v1"
+        "EXPO_PUBLIC_API_BASE_URL": "http://58.229.163.104:3000/api/v1"
       }
     },
     "production": {
