@@ -1,11 +1,12 @@
 import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
-const USER_ID_REGEX = /^[a-zA-Z0-9_]{4,20}$/;
+// v3: 10자 이내, 영문/숫자/한글 (underscore 제외)
+const USER_ID_REGEX = /^[a-zA-Z0-9가-힣]{1,10}$/;
 
 export class RegisterDto {
   @IsString()
-  @Length(4, 20)
-  @Matches(USER_ID_REGEX, { message: '사용자 ID는 4-20자 영문/숫자/_만 가능' })
+  @Length(1, 10)
+  @Matches(USER_ID_REGEX, { message: '사용자 ID는 10자 이내, 영문/숫자/한글만 가능' })
   userId!: string;
 
   @IsString()

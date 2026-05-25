@@ -173,7 +173,7 @@ function ArticleBody({ article }: { article: Article | null }) {
   );
 }
 
-function ChatBody({ article }: { article: Article | null }) {
+function ChatBody({ article: _article }: { article: Article | null }) {
   const chat = useChat();
   const [input, setInput] = useState('');
   const listRef = useRef<FlatList<ChatMessage>>(null);
@@ -191,37 +191,13 @@ function ChatBody({ article }: { article: Article | null }) {
     void chat.send(body);
   }
 
+  // v3: pinned context card 제거. 헤더 바로 아래에서 메시지 리스트 시작.
   return (
     <KeyboardAvoidingView
       className="flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
     >
-      {/* Pinned context card */}
-      {article ? (
-        <View
-          className="flex-row items-center mx-4 mt-3 px-3 py-2 bg-surface rounded-card"
-          style={{ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 1 } }}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 8,
-              backgroundColor: article.tone?.bg ?? '#e5e5ea',
-            }}
-          />
-          <View className="flex-1 ml-3">
-            <Text className="text-muted" style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1.4 }}>
-              토론 중인 기사
-            </Text>
-            <Text className="text-text mt-0.5" style={{ fontSize: 13, fontWeight: '600' }} numberOfLines={1}>
-              {article.title}
-            </Text>
-          </View>
-        </View>
-      ) : null}
-
       <FlatList
         ref={listRef}
         className="flex-1"

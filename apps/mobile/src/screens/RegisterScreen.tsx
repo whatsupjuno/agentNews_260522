@@ -25,7 +25,8 @@ interface Errors {
   global?: string;
 }
 
-const USER_ID_RE = /^[a-zA-Z0-9_]{4,20}$/;
+// v3: 10자 이내, 영문/숫자/한글
+const USER_ID_RE = /^[a-zA-Z0-9가-힣]{1,10}$/;
 
 export function RegisterScreen({ navigation }: Props) {
   const auth = useAuth();
@@ -38,7 +39,7 @@ export function RegisterScreen({ navigation }: Props) {
 
   function validate(): boolean {
     const e: Errors = {};
-    if (!USER_ID_RE.test(userId)) e.userId = '사용자 ID는 4-20자 영문/숫자/_만 사용 가능합니다.';
+    if (!USER_ID_RE.test(userId)) e.userId = '사용자 ID는 10자 이내, 영문/숫자/한글만 가능합니다.';
     if (password.length < 8) e.password = '비밀번호는 8자 이상이어야 합니다.';
     if (password !== passwordConfirm) e.passwordConfirm = '비밀번호가 일치하지 않습니다.';
     setErrors(e);
@@ -94,7 +95,7 @@ export function RegisterScreen({ navigation }: Props) {
             <TextInput
               className="bg-bg rounded-md px-4 py-3 text-text"
               style={{ fontSize: 17 }}
-              placeholder="4-20자, 영문/숫자/_"
+              placeholder="10자 이내, 영문/숫자/한글"
               placeholderTextColor="#86868b"
               autoCapitalize="none"
               autoCorrect={false}

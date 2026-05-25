@@ -308,32 +308,12 @@ function ChatBody() {
           background: '#fff',
         }}
       >
-        {/* disguised pinned context */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 12px', borderRadius: 12,
-          background: '#f5f5f7', marginBottom: 16,
-        }}>
-          <div style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
-            <DNImagePlaceholder tone={DEMO_ARTICLE.tone} height={40} rounded={8}/>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 10.5, fontWeight: 600, letterSpacing: 1,
-              color: DN_COLORS.muted, textTransform: 'uppercase',
-            }}>토론 중인 기사</div>
-            <div style={{
-              fontSize: 13, fontWeight: 600, color: DN_COLORS.text,
-              marginTop: 2, lineHeight: 1.25,
-              display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}>{DEMO_ARTICLE.title}</div>
-          </div>
-        </div>
+        {/* Pinned context card removed — disguise: chat mode entry presents
+            zero article-link signal. Day separator + message list only. */}
 
         <div style={{
           textAlign: 'center', fontSize: 11, color: DN_COLORS.muted,
-          margin: '0 0 12px', letterSpacing: 0.2,
+          margin: '4px 0 12px', letterSpacing: 0.2,
         }}>오늘 오전 11:48</div>
 
         {messages.map((m, i) => (

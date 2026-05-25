@@ -75,23 +75,24 @@
 
 <div class="stage">
   <aside class="caption">
-    <div class="eyebrow">Artifact 01 / 06</div>
+    <div class="eyebrow">Artifact 01 / 06 · v3</div>
     <h1>NewsFeedScreen</h1>
-    <p>위장 뉴스 피드. Hero 1개 + 6개 카드, pull-to-refresh, 카테고리 칩, 하단 탭바.</p>
+    <p>균일 카드 그리드 (Hero 제거) · 카테고리 strip 이 시퀀스 입력 영역을 겸함.</p>
     <p style="margin-top:8px">디자인 토큰은 brief 그대로 — #f5f5f7 / #007aff / 12·14·16 radius / SF Pro stack.</p>
     <ul>
       <li><b>Frame</b> · iPhone 14 — 390 × 844</li>
-      <li><b>탭 가능</b> · 모든 카드</li>
+      <li><b>탭</b> · 카테고리 pill (시퀀스) + 카드 (일반 열기)</li>
       <li><b>Pull</b> · 위에서 아래로 드래그</li>
-      <li><b>위장</b> · "chat / secret / agent" 단어 0</li>
+      <li><b>위장</b> · "chat / secret / agent" 어휘 0</li>
     </ul>
     <div class="hint">
-      <b>2단계 위장</b>:<br/>
-      ① <b>DailyNews</b> 워드마크 탭 → ARM (8초간, <b>외관 변화 0</b>)<br/>
-      ② <b>5 → 3 → 1 → 7</b> 순서로 카드 탭 → unlock<br/>
-      ARM 안 한 상태에서 카드 탭 → 일반 기사 열기.<br/>
-      <b>모든 ARM/시퀀스 단계 토스트/애니/소리/진동 0.</b><br/>
-      <code>D</code> 키 = 개발자용 상태 패널 (위장 영향 X).
+      <b>2단계 위장 · v3</b>:<br/>
+      ① <b>DailyNews</b> 워드마크 탭 → ARM (8초)<br/>
+      ② 카테고리 pill 의 <b>position 5 → 3 → 1 → 7</b> 순서 탭<br/>
+      즉, <code>문화</code> → <code>경제</code> → <code>헤드라인</code> → <code>사회</code> 순서.<br/>
+      워드마크 외관 변화 0 · 단, <b>아바타 bg 색이 회색</b>으로 미세 피드백 (사용자 인지용).<br/>
+      카드 탭 = 일반 기사 열기 (시퀀스 영향 0).<br/>
+      <code>D</code> 키 = 개발자 상태 패널 (카테고리 이름도 표시).
     </div>
   </aside>
 

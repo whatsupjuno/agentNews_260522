@@ -79,6 +79,14 @@ function SettingsScreen({ openModal: openModalProp }) {
           <Row icon="ⓘ" iconBg="#8e8e93" label="버전 정보" detail="2.4.1 (build 312)" chevron={false} last/>
         </Group>
 
+        {/* Footer-style separator between app group and account exit actions —
+            visual gap prevents misreading "로그아웃" as part of the app group. */}
+        <div style={{
+          margin: '36px 32px 0',
+          height: 0.5,
+          background: DN_COLORS.separator,
+        }}/>
+
         <Group>
           <Row label="로그아웃" danger center last/>
         </Group>

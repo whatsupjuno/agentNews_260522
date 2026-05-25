@@ -111,7 +111,8 @@ export function SettingsScreen({ navigation }: Props) {
           <Row icon="ⓘ" iconBg="#8e8e93" label="버전 정보" value="0.1.0 (1)" trailingChevron={false} />
         </Group>
 
-        {/* Logout */}
+        {/* Logout — v3: 버전 정보 group 과 분리 (간격 강화) */}
+        <View style={{ height: 32 }} />
         <Group>
           <Pressable
             onPress={() => void auth.logout()}

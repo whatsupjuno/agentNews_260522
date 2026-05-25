@@ -1,23 +1,24 @@
 // RegisterScreen — 4 validation states
 // state: 'empty' | 'err-email' | 'err-id' | 'err-pw' | 'err-mismatch' | 'valid'
+// 사용자 ID 규칙: 10자 이내, 영문/숫자/한글 (regex: /^[a-zA-Z0-9가-힣]{1,10}$/)
 
 const { useState: useStateR } = React;
 
 function RegisterScreen({ state = 'empty' }) {
   // Pre-fill values based on the validation scenario we want to show
   const scenarios = {
-    'empty':        { email: '',                  id: '',           pw: '',         pw2: '',         err: 'email' },
-    'err-email':    { email: 'jun@daily',         id: 'junkyu_2026', pw: '12345678', pw2: '12345678', err: 'email' },
-    'err-id':       { email: 'jun@daily.com',     id: 'jk',         pw: '12345678', pw2: '12345678', err: 'id' },
-    'err-pw':       { email: 'jun@daily.com',     id: 'junkyu_2026', pw: '12345',    pw2: '12345',    err: 'pw' },
-    'err-mismatch': { email: 'jun@daily.com',     id: 'junkyu_2026', pw: '12345678', pw2: '87654321', err: 'mismatch' },
-    'valid':        { email: 'jun@daily.com',     id: 'junkyu_2026', pw: '12345678', pw2: '12345678', err: null },
+    'empty':        { email: '',                  id: '',         pw: '',         pw2: '',         err: 'email' },
+    'err-email':    { email: 'jun@daily',         id: '준규',       pw: '12345678', pw2: '12345678', err: 'email' },
+    'err-id':       { email: 'jun@daily.com',     id: 'jun_2026', pw: '12345678', pw2: '12345678', err: 'id' },      // underscore 포함 → fail
+    'err-pw':       { email: 'jun@daily.com',     id: '준규',       pw: '12345',    pw2: '12345',    err: 'pw' },
+    'err-mismatch': { email: 'jun@daily.com',     id: '준규',       pw: '12345678', pw2: '87654321', err: 'mismatch' },
+    'valid':        { email: 'jun@daily.com',     id: '준규',       pw: '12345678', pw2: '12345678', err: null },
   };
   const s = scenarios[state] || scenarios.empty;
 
   const errors = state === 'empty' ? {} : {
     email: s.err === 'email' ? '올바른 이메일 형식이 아닙니다' : null,
-    id:    s.err === 'id'    ? '사용자 ID는 4–20자 영문/숫자/_ 만 가능합니다' : null,
+    id:    s.err === 'id'    ? '10자 이내, 영문/숫자/한글' : null,
     pw:    s.err === 'pw'    ? '비밀번호는 8자 이상이어야 합니다' : null,
     pw2:   s.err === 'mismatch' ? '비밀번호가 일치하지 않습니다' : null,
   };
@@ -62,7 +63,7 @@ function RegisterScreen({ state = 'empty' }) {
           label="사용자 ID"
           value={s.id}
           onChange={() => {}}
-          placeholder="4–20자, 영문/숫자/_"
+          placeholder="10자 이내, 영문/숫자/한글"
           error={errors.id}
           showErrorBelow={true}
           errorText={errors.id}
