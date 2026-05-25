@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../store/auth';
+import { scheduleDisguisedDemoPush } from '../services/demoPush';
 
 // SCR-030 SettingsScreen — handoff §8.7
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
@@ -90,7 +91,20 @@ export function SettingsScreen({ navigation }: Props) {
         {/* App group */}
         <GroupHeader text="앱" />
         <Group>
-          <Row icon="🔔" iconBg="#ff453a" label="알림" value="켜짐" />
+          <Row
+            icon="🔔"
+            iconBg="#ff453a"
+            label="알림 테스트"
+            value="5초 후"
+            onPress={async () => {
+              const r = await scheduleDisguisedDemoPush();
+              if (!r.delivered) {
+                Alert.alert('알림 권한 필요', '설정 → 알림에서 권한 허용 후 다시 시도');
+                return;
+              }
+              Alert.alert('5초 뒤 알림 도착', `홈 버튼으로 잠금화면 / 배경 이동\n\n📰 새 뉴스 — ${r.body}`);
+            }}
+          />
           <Separator />
           <Row icon="◐" iconBg="#5ac8fa" label="다크 모드" value="시스템" />
           <Separator />

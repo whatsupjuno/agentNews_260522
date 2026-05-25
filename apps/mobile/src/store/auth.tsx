@@ -30,6 +30,25 @@ interface AuthResponse {
   user: AuthUser;
 }
 
+/** JWT exp (초) 추출. 만료 또는 파싱 실패 시 true. */
+function isJwtExpired(token: string, marginSec = 0): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3 || !parts[1]) return true;
+    const payload = parts[1];
+    const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
+    const b64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+    // RN 환경에 atob 존재 (Hermes 빌트인)
+    const decoded = globalThis.atob ? globalThis.atob(b64) : '';
+    if (!decoded) return true;
+    const obj = JSON.parse(decoded) as { exp?: number };
+    if (typeof obj.exp !== 'number') return true;
+    return obj.exp * 1000 < Date.now() + marginSec * 1000;
+  } catch {
+    return true;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -100,7 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       async getValidAccessToken() {
-        if (state.accessToken) return state.accessToken;
+        // 만료 30초 전이면 미리 refresh
+        if (state.accessToken && !isJwtExpired(state.accessToken, 30)) {
+          return state.accessToken;
+        }
         const rt = state.refreshToken;
         if (!rt) return null;
         try {
