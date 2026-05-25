@@ -44,7 +44,9 @@ export function NewsFeedScreen({ navigation }: Props) {
     const access = await auth.getValidAccessToken();
     if (!access) return;
     try {
-      const res = await apiFetch<{ articles: FeedArticle[] }>('/news/feed', { accessToken: access });
+      const res = await apiFetch<{ articles: FeedArticle[] }>('/news/feed', {
+        accessToken: access,
+      });
       setArticles(res.articles);
       setUpdatedAt(
         new Date().toLocaleTimeString('ko-KR', {
@@ -54,7 +56,7 @@ export function NewsFeedScreen({ navigation }: Props) {
         }),
       );
     } catch {
-      // silent
+      // silent — 위장
     }
   }, [auth]);
 

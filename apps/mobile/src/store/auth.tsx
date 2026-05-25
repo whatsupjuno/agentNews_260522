@@ -79,6 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  async function forceUnauthenticated(): Promise<void> {
+    await secureStore.clear();
+    setState({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      status: 'unauthenticated',
+    });
+  }
+
   async function persist(res: AuthResponse) {
     await Promise.all([
       secureStore.set('accessToken', res.accessToken),
@@ -124,7 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return state.accessToken;
         }
         const rt = state.refreshToken;
-        if (!rt) return null;
+        if (!rt) {
+          await forceUnauthenticated();
+          return null;
+        }
         try {
           const res = await apiFetch<AuthResponse>('/auth/refresh', {
             method: 'POST',
@@ -133,15 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await persist(res);
           return res.accessToken;
         } catch (e) {
-          if (e instanceof ApiError && e.status === 401) {
-            await secureStore.clear();
-            setState({
-              user: null,
-              accessToken: null,
-              refreshToken: null,
-              status: 'unauthenticated',
-            });
-          }
+          // refresh 실패 = 어떤 종류든 (401 / network / 5xx) → 강제 로그아웃
+          // 사용자가 '인증된 상태인데 token 없음' 갇힘 방지
+          await forceUnauthenticated();
           return null;
         }
       },

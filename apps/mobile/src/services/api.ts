@@ -25,21 +25,58 @@ export class ApiError extends Error {
 /**
  * Expo Go 가 자동 감지한 dev server LAN IP 를 백엔드 host 로 사용.
  * (`localhost` 는 실기기에서 동작 X)
+ *
+ * SDK 버전마다 노출 path 가 다름 — 여러 후보 시도.
  */
-function getBaseHost(): string {
-  const hostUri =
-    (Constants.expoConfig as { hostUri?: string } | null)?.hostUri ??
-    (Constants as unknown as { expoGoConfig?: { hostUri?: string } }).expoGoConfig?.hostUri ??
-    '';
-  if (hostUri) {
-    const host = hostUri.split(':')[0];
-    if (host) return host;
+function extractHost(): string {
+  const cfg = Constants as unknown as {
+    expoConfig?: { hostUri?: string };
+    expoGoConfig?: { debuggerHost?: string; hostUri?: string };
+    manifest?: { debuggerHost?: string; hostUri?: string };
+    manifest2?: { extra?: { expoClient?: { hostUri?: string } } };
+    experienceUrl?: string;
+    linkingUri?: string;
+  };
+  const candidates: Array<string | undefined> = [
+    cfg.expoConfig?.hostUri,
+    cfg.expoGoConfig?.debuggerHost,
+    cfg.expoGoConfig?.hostUri,
+    cfg.manifest?.debuggerHost,
+    cfg.manifest?.hostUri,
+    cfg.manifest2?.extra?.expoClient?.hostUri,
+    cfg.experienceUrl?.replace(/^exp:\/\//, ''),
+    cfg.linkingUri?.replace(/^exp:\/\//, ''),
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.length > 0) {
+      const host = c.split(':')[0];
+      if (host && host !== 'undefined' && host !== 'localhost') {
+        return host;
+      }
+    }
   }
   return 'localhost';
 }
 
-export const API_BASE = `http://${getBaseHost()}:3000/api/v1`;
-export const WS_BASE = `http://${getBaseHost()}:3000`;
+const HOST = extractHost();
+export const API_BASE = `http://${HOST}:3000/api/v1`;
+export const WS_BASE = `http://${HOST}:3000`;
+
+// 디버그 노출 (NewsFeed 임시 디버그 박스에서 사용)
+export const DEBUG_INFO = {
+  host: HOST,
+  apiBase: API_BASE,
+  rawCandidates: (() => {
+    const cfg = Constants as unknown as Record<string, unknown>;
+    return {
+      expoConfig_hostUri: (cfg.expoConfig as { hostUri?: string } | undefined)?.hostUri,
+      expoGoConfig_debuggerHost: (cfg.expoGoConfig as { debuggerHost?: string } | undefined)
+        ?.debuggerHost,
+      experienceUrl: cfg.experienceUrl as string | undefined,
+      linkingUri: cfg.linkingUri as string | undefined,
+    };
+  })(),
+};
 
 interface FetchOpts {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -85,7 +122,12 @@ export async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T
     return undefined as T;
   }
   const envelope = parsed as ApiOkEnvelope<T> | T;
-  if (envelope && typeof envelope === 'object' && 'success' in envelope && (envelope as ApiOkEnvelope<T>).success === true) {
+  if (
+    envelope &&
+    typeof envelope === 'object' &&
+    'success' in envelope &&
+    (envelope as ApiOkEnvelope<T>).success === true
+  ) {
     return (envelope as ApiOkEnvelope<T>).data;
   }
   return envelope as T;
