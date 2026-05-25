@@ -32,7 +32,11 @@ export function RootNavigator({ isAuthenticated }: Props) {
         <Stack.Group>
           <Stack.Screen name="NewsFeed" component={NewsFeedScreen} />
           <Stack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ animation: 'none' }}
+          />
           <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
           <Stack.Screen name="Admin" component={AdminScreen} />
         </Stack.Group>
