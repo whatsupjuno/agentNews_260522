@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — RegisterScreen</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: radial-gradient(1400px 700px at 50% -10%, #ececef 0%, transparent 60%), #e6e6ea;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .container { padding: 40px 24px; max-width: 1700px; margin: 0 auto; }
+  .header { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: end; margin-bottom: 32px; padding-bottom: 22px; border-bottom: 0.5px solid rgba(60,60,67,0.12); }
+  .eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #86868b; margin-bottom: 6px; }
+  .header h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.6px; }
+  .header .sub { font-size: 14px; color: #515154; margin-top: 8px; max-width: 540px; }
+  .header .meta { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; color: #86868b; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .col-label {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.4px;
+    color: #86868b; text-transform: uppercase;
+    text-align: center; line-height: 1.4;
+  }
+  .col-label .err { color: #ff3b30; }
+  .col-label .ok { color: #28a745; }
+  .col-sub { font-size: 11.5px; color: #6e6e73; text-align: center; line-height: 1.5; max-width: 240px; }
+  .col-sub code { background: #f1f1f3; padding: 1px 5px; border-radius: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10.5px; }
+
+  @media (max-width: 1500px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div>
+      <div class="eyebrow">P0 · RegisterScreen · 5 states</div>
+      <h1>회원가입 화면 — Validation 시나리오</h1>
+      <p class="sub">4개 입력 (이메일 · 사용자 ID · 비밀번호 · 비밀번호 확인) + 약관 동의 + CTA. 검증 통과 시에만 CTA 활성 (#007aff). 모든 에러는 입력 칸 하단에 12/500 #ff3b30.</p>
+    </div>
+    <div class="meta">RegisterScreen · 390×844 · iPhone 14</div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <div class="col-label">초기 빈 상태</div>
+      <div id="device-empty"></div>
+      <div class="col-sub">모든 칸 placeholder · CTA <b>비활성</b> (회색).</div>
+    </div>
+    <div class="col">
+      <div class="col-label"><span class="err">에러 ①</span> · 이메일 형식</div>
+      <div id="device-email"></div>
+      <div class="col-sub"><code>jun@daily</code> — 도메인 누락. RFC 형식 검증.</div>
+    </div>
+    <div class="col">
+      <div class="col-label"><span class="err">에러 ②</span> · 사용자 ID</div>
+      <div id="device-id"></div>
+      <div class="col-sub"><code>jun_2026</code> — underscore 포함. 10자 이내 영문/숫자/한글.</div>
+    </div>
+    <div class="col">
+      <div class="col-label"><span class="err">에러 ③</span> · 비밀번호 짧음</div>
+      <div id="device-pw"></div>
+      <div class="col-sub"><code>12345</code> — 8자 미만.</div>
+    </div>
+    <div class="col">
+      <div class="col-label"><span class="err">에러 ④</span> · 비밀번호 불일치</div>
+      <div id="device-mismatch"></div>
+      <div class="col-sub">위/아래 다른 값. 클라이언트만 검증.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;text-align:center">
+    <div class="col-label" style="color:#28a745;margin-bottom:10px">✓ 모두 통과</div>
+    <div id="device-valid" style="display:inline-block"></div>
+    <div class="col-sub" style="margin-top:10px">모든 에러 클리어 · CTA <b>활성</b> (#007aff).</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="screens/shared.jsx"></script>
+<script type="text/babel" src="screens/login-screen.jsx"></script>
+<script type="text/babel" src="screens/register-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  const Wrap = ({ state, label }) => (
+    <IOSDevice width={360} height={780}>
+      <div style={{ paddingTop: 60, height: '100%', boxSizing: 'border-box' }} data-screen-label={label}>
+        <RegisterScreen state={state}/>
+      </div>
+    </IOSDevice>
+  );
+
+  ReactDOM.createRoot(document.getElementById('device-empty')).render(<Wrap state="empty" label="Register Empty"/>);
+  ReactDOM.createRoot(document.getElementById('device-email')).render(<Wrap state="err-email" label="Register Email Err"/>);
+  ReactDOM.createRoot(document.getElementById('device-id')).render(<Wrap state="err-id" label="Register ID Err"/>);
+  ReactDOM.createRoot(document.getElementById('device-pw')).render(<Wrap state="err-pw" label="Register PW Err"/>);
+  ReactDOM.createRoot(document.getElementById('device-mismatch')).render(<Wrap state="err-mismatch" label="Register Mismatch"/>);
+  ReactDOM.createRoot(document.getElementById('device-valid')).render(<Wrap state="valid" label="Register Valid"/>);
+</script>
+
+</body>
+</html>

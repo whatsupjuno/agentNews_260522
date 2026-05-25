@@ -8,12 +8,13 @@ import {
   AgentEntity,
   MessageEntity,
   PairingEntity,
+  PushTokenEntity,
 } from './infrastructure/database/entities';
 
 @Module({
   imports: [
     AuthModule,
-    TypeOrmModule.forFeature([MessageEntity, PairingEntity, AgentEntity]),
+    TypeOrmModule.forFeature([MessageEntity, PairingEntity, AgentEntity, PushTokenEntity]),
   ],
   controllers: [MessageController],
   providers: [MessageService, MessageGateway],

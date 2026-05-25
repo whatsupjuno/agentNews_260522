@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — Article Detail (normal + chat swap)</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: radial-gradient(1400px 700px at 50% -10%, #ececef 0%, transparent 60%), #e6e6ea;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .stage {
+    display: flex; align-items: flex-start; justify-content: center;
+    gap: 28px; padding: 40px 32px;
+    flex-wrap: wrap;
+  }
+  .caption {
+    max-width: 260px;
+    color: #515154;
+    font-size: 13px; line-height: 1.55;
+    padding-top: 8px;
+  }
+  .caption .eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; color: #86868b; margin-bottom: 8px;
+  }
+  .caption h1 {
+    margin: 0 0 8px; font-size: 22px; font-weight: 700;
+    letter-spacing: -0.4px; color: #1d1d1f;
+  }
+  .caption p { margin: 0 0 10px; }
+  .col {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .col-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+    color: #86868b; text-transform: uppercase;
+  }
+  .col-sub {
+    font-size: 12px; color: #6e6e73; max-width: 360px; text-align: center;
+    line-height: 1.5;
+  }
+  .col-sub b { color: #1d1d1f; font-weight: 600; }
+
+  .hint {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    font-size: 11.5px; line-height: 1.5; color: #515154;
+  }
+  .hint b { color: #007aff; }
+  .hint code {
+    background: #f5f5f7; padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+  }
+
+  @keyframes dn-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <aside class="caption">
+    <div class="eyebrow">Artifact 02 + 03 / 06</div>
+    <h1>ArticleDetailScreen</h1>
+    <p>같은 RN screen — <b>unlock + PAIRED</b> 시 헤더 그대로 두고 본문만 채팅 모드로 conditional swap.</p>
+    <p>두 모드 헤더 chrome 동일 (뒤로가기 · 기사 / 기사 토론 · 북마크 · 공유). 외부 화면 이름은 항상 "기사".</p>
+
+    <div class="hint">
+      위장 단서:
+      <ul style="padding-left:18px; margin:6px 0 0">
+        <li>채팅 모드에서도 헤더 타이틀은 "기사 토론"</li>
+        <li>채팅 입력창 placeholder = "댓글 입력"</li>
+        <li><b>핀 카드 없음</b> — 어떤 기사인지 단서도 노출 X</li>
+        <li>RN URL bar 부재 — route 이름 노출 0</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="col">
+    <div class="col-label">02 — Normal Mode</div>
+    <div id="device-normal"></div>
+    <div class="col-sub">
+      Hero 이미지 + drop-cap 본문 + <b>byline 카드</b> + 원문 보기 CTA + 관련 기사. 외부 사용자가 보는 평범한 뉴스 상세.
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="col-label">03 — Chat Swap Mode</div>
+    <div id="device-chat"></div>
+    <div class="col-sub">
+      <b>localStorage.dn_unlock = "1"</b> 일 때 같은 화면이 메시지 리스트로 swap. 그룹핑 (1분 이내 동일 발신자), corner-pinch tail, 이미지 첨부 inline preview, <b>댓글 입력</b> placeholder.
+    </div>
+  </div>
+</div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="screens/shared.jsx"></script>
+<script type="text/babel" src="screens/article-detail-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react" data-screen-label="02-03 ArticleDetail">
+  function Wrap({ mode, label }) {
+    return (
+      <IOSDevice width={390} height={844} title={undefined}>
+        <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }} data-screen-label={label}>
+          <ArticleDetailScreen forceMode={mode}/>
+        </div>
+      </IOSDevice>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('device-normal'))
+    .render(<Wrap mode="normal" label="02 ArticleDetail Normal"/>);
+  ReactDOM.createRoot(document.getElementById('device-chat'))
+    .render(<Wrap mode="chat" label="03 ArticleDetail ChatSwap"/>);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — LoginScreen</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    background: radial-gradient(1400px 700px at 50% -10%, #ececef 0%, transparent 60%), #e6e6ea;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .stage { display: flex; align-items: flex-start; justify-content: center; gap: 28px; padding: 40px 24px; flex-wrap: wrap; }
+  .caption { max-width: 260px; color: #515154; font-size: 13px; line-height: 1.55; padding-top: 8px; }
+  .caption .eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #86868b; margin-bottom: 8px; }
+  .caption h1 { margin: 0 0 8px; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: #1d1d1f; }
+  .caption p { margin: 0 0 10px; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .col-label { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; color: #86868b; text-transform: uppercase; }
+  .col-sub { font-size: 12px; color: #6e6e73; max-width: 320px; text-align: center; line-height: 1.5; }
+  .col-sub b { color: #1d1d1f; font-weight: 600; }
+  .hint { margin-top: 14px; padding: 10px 12px; background: #fff; border: 0.5px solid rgba(0,0,0,0.08); border-radius: 10px; font-size: 11.5px; line-height: 1.5; color: #515154; }
+  .hint b { color: #007aff; }
+
+  @keyframes dn-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <aside class="caption">
+    <div class="eyebrow">P0 · LoginScreen</div>
+    <h1>로그인 화면</h1>
+    <p>미인증 진입점. 평범한 뉴스 앱 로그인 패턴. <b>chat / secret / agent</b> 어휘 0.</p>
+    <div class="hint">
+      입력 → 빈/포커스/실패/로딩 4 state.<br/>
+      에러 메시지: <b>#ff3b30 / 12px / 500</b> 비밀번호 input 하단.<br/>
+      Loading: CTA 가 비활성 + 스피너로 전환.
+    </div>
+  </aside>
+
+  <div class="col">
+    <div class="col-label">기본 상태</div>
+    <div id="device-basic"></div>
+    <div class="col-sub">빈 입력 / focus 가능 / CTA 활성.</div>
+  </div>
+
+  <div class="col">
+    <div class="col-label">로그인 실패</div>
+    <div id="device-error"></div>
+    <div class="col-sub">입력 칸 빨간 보더 + <b>비밀번호 하단</b> 에러 메시지. shake X (위장).</div>
+  </div>
+
+  <div class="col">
+    <div class="col-label">로딩</div>
+    <div id="device-loading"></div>
+    <div class="col-sub">CTA 비활성 + 스피너 + "로그인 중..." 라벨. 입력 disabled.</div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="screens/shared.jsx"></script>
+<script type="text/babel" src="screens/login-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+  const Wrap = ({ state, label }) => (
+    <IOSDevice width={390} height={844}>
+      <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }} data-screen-label={label}>
+        <LoginScreen state={state}/>
+      </div>
+    </IOSDevice>
+  );
+
+  ReactDOM.createRoot(document.getElementById('device-basic'))
+    .render(<Wrap state="basic" label="Login Basic"/>);
+  ReactDOM.createRoot(document.getElementById('device-error'))
+    .render(<Wrap state="error" label="Login Error"/>);
+  ReactDOM.createRoot(document.getElementById('device-loading'))
+    .render(<Wrap state="loading" label="Login Loading"/>);
+</script>
+
+</body>
+</html>

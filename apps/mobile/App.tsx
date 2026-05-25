@@ -1,4 +1,5 @@
 import './global.css';
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -6,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { AuthProvider, useAuth } from './src/store/auth';
 import { UnlockProvider } from './src/store/unlock';
+import { initNotificationHandler } from './src/services/pushRegistration';
 
 function AppShell() {
   const auth = useAuth();
@@ -20,6 +22,9 @@ function AppShell() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initNotificationHandler();
+  }, []);
   return (
     <SafeAreaProvider>
       <AuthProvider>

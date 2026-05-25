@@ -2,10 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, In, LessThan } from 'typeorm';
 import { CryptoService } from '../../infrastructure/crypto/crypto.service';
+import { ExpoPushService } from '../../infrastructure/push/expo-push.service';
 import {
   MessageEntity,
   PairingEntity,
   AgentEntity,
+  PushTokenEntity,
 } from '../../infrastructure/database/entities';
 import { MessageGateway } from '../../presentation/gateways/message.gateway';
 
@@ -26,8 +28,10 @@ export class MessageService {
     @InjectRepository(MessageEntity) private readonly messages: Repository<MessageEntity>,
     @InjectRepository(PairingEntity) private readonly pairings: Repository<PairingEntity>,
     @InjectRepository(AgentEntity) private readonly agents: Repository<AgentEntity>,
+    @InjectRepository(PushTokenEntity) private readonly pushTokens: Repository<PushTokenEntity>,
     private readonly crypto: CryptoService,
     private readonly gateway: MessageGateway,
+    private readonly push: ExpoPushService,
   ) {}
 
   async listForAgent(agentId: string, before?: string): Promise<DecryptedMessage[]> {
@@ -104,7 +108,29 @@ export class MessageService {
         fromMe: undefined, // remove client-relative flag from broadcast
       },
     });
+
+    // 위장 푸시 — 페어 상대에게만 (자기 자신 제외), 1분 dedup
+    const peerId =
+      pair.requesterAgentId === agentId ? pair.recipientAgentId : pair.requesterAgentId;
+    void this.dispatchDisguisedPush(pair.id, peerId);
+
     return msg;
+  }
+
+  /** 페어 상대의 모든 Expo Push Token 에 위장 푸시 fan-out (1분 dedup) */
+  private async dispatchDisguisedPush(pairingId: string, recipientAgentId: string): Promise<void> {
+    try {
+      const tokens = await this.pushTokens.find({
+        where: { agentId: recipientAgentId, deletedAt: IsNull() },
+      });
+      if (tokens.length === 0) return;
+      await this.push.sendDisguisedToPair(
+        pairingId,
+        tokens.map((t) => t.fcmToken),
+      );
+    } catch {
+      // silent — 푸시 실패가 메시지 전송 자체에 영향 주지 않음
+    }
   }
 
   /** Echo bot trigger — pair.recipient 가 봇이면 자동 응답 1개 INSERT. */

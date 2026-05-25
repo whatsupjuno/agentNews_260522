@@ -7,14 +7,16 @@ import {
   AgentEntity,
   MessageEntity,
   PairingEntity,
+  PushTokenEntity,
 } from './infrastructure/database/entities';
 
 @Module({
   imports: [
     AuthModule,
-    TypeOrmModule.forFeature([AgentEntity, PairingEntity, MessageEntity]),
+    TypeOrmModule.forFeature([AgentEntity, PairingEntity, MessageEntity, PushTokenEntity]),
   ],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

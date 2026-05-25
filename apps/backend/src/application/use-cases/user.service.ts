@@ -5,6 +5,7 @@ import {
   AgentEntity,
   MessageEntity,
   PairingEntity,
+  PushTokenEntity,
 } from '../../infrastructure/database/entities';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class UserService {
     @InjectRepository(AgentEntity) private readonly agents: Repository<AgentEntity>,
     @InjectRepository(PairingEntity) private readonly pairings: Repository<PairingEntity>,
     @InjectRepository(MessageEntity) private readonly messages: Repository<MessageEntity>,
+    @InjectRepository(PushTokenEntity) private readonly pushTokens: Repository<PushTokenEntity>,
   ) {}
 
   async me(agentId: string) {
@@ -28,7 +30,7 @@ export class UserService {
     }
     return {
       externalId: agent.externalId,
-      userId: agent.email, // userId 가 email 컬럼에 저장됨 (Phase 1)
+      userId: agent.email,
       nickname: agent.nickname,
       pairCount: pair ? 1 : 0,
       peer,
@@ -47,7 +49,6 @@ export class UserService {
   async deleteMe(agentId: string): Promise<void> {
     const agent = await this.agents.findOne({ where: { id: agentId, deletedAt: IsNull() } });
     if (!agent) throw new NotFoundException();
-    // soft delete agent + cascade pair / messages (hard delete messages)
     const pairs = await this.pairings.find({
       where: [{ requesterAgentId: agentId }, { recipientAgentId: agentId }],
     });
@@ -62,6 +63,44 @@ export class UserService {
     agent.status = 'DELETED';
     agent.deletedAt = new Date();
     await this.agents.save(agent);
+  }
+
+  /**
+   * Expo Push Token 등록. 같은 agent + 같은 token = upsert.
+   * `push_tokens.fcm_token` 컬럼에 Expo Push Token 저장 (의미 변환).
+   */
+  async registerPushToken(agentId: string, token: string, platform: 'ios' | 'android'): Promise<void> {
+    const existing = await this.pushTokens.findOne({
+      where: { fcmToken: token, deletedAt: IsNull() },
+    });
+    if (existing) {
+      existing.agentId = agentId;
+      existing.platform = platform;
+      existing.lastSeenAt = new Date();
+      await this.pushTokens.save(existing);
+      return;
+    }
+    await this.pushTokens.save(
+      this.pushTokens.create({
+        agentId,
+        fcmToken: token,
+        platform,
+        lastSeenAt: new Date(),
+      }),
+    );
+  }
+
+  /** 페어 상대의 active push token 들 반환 (fan-out 대상). */
+  async getPeerPushTokens(agentId: string): Promise<string[]> {
+    const pair = await this.findActivePair(agentId);
+    if (!pair) return [];
+    const peerId =
+      pair.requesterAgentId === agentId ? pair.recipientAgentId : pair.requesterAgentId;
+    const rows = await this.pushTokens.find({
+      where: { agentId: peerId, deletedAt: IsNull() },
+      order: { lastSeenAt: 'DESC' },
+    });
+    return rows.map((r) => r.fcmToken);
   }
 
   private async findActivePair(agentId: string): Promise<PairingEntity | null> {

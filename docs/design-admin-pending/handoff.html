@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews · agentNews — Handoff Bundle</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --paper: #fff;
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --line: rgba(60,60,67,0.12);
+    --accent: #007aff;
+    --red: #ff3b30;
+    --green: #34c759;
+    --orange: #ff9500;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+
+  /* Hero */
+  header.hero {
+    margin-bottom: 48px; padding-bottom: 32px;
+    border-bottom: 0.5px solid var(--line);
+  }
+  .codename {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--red); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  header.hero h1 {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: 52px; font-weight: 800; letter-spacing: -1.6px;
+    margin: 0; line-height: 1;
+  }
+  header.hero .sub {
+    font-size: 17px; color: #515154;
+    margin: 14px 0 0; max-width: 620px;
+  }
+  .pill-row {
+    display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap;
+  }
+  .pill {
+    background: var(--paper);
+    border: 0.5px solid var(--line);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+    color: var(--text);
+  }
+  .pill b { color: var(--accent); }
+  .pill .dot { display: inline-block; width: 7px; height: 7px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
+
+  /* Reading order */
+  .order {
+    background: var(--text); color: #fff;
+    border-radius: 18px;
+    padding: 28px 32px;
+    margin-bottom: 40px;
+  }
+  .order .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.8px;
+    color: rgba(255,255,255,0.5); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .order h2 {
+    margin: 0 0 16px;
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 24px; font-weight: 700; letter-spacing: -0.4px;
+  }
+  .order ol {
+    margin: 0; padding: 0; list-style: none;
+    counter-reset: step;
+  }
+  .order ol li {
+    counter-increment: step;
+    padding: 12px 0;
+    border-top: 0.5px solid rgba(255,255,255,0.12);
+    display: grid; grid-template-columns: 28px 1fr; gap: 14px;
+    align-items: baseline;
+  }
+  .order ol li:first-child { border-top: none; padding-top: 0; }
+  .order ol li::before {
+    content: counter(step);
+    width: 22px; height: 22px;
+    background: rgba(255,255,255,0.12); color: #fff;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px; font-weight: 600;
+    align-self: flex-start;
+  }
+  .order ol li .t {
+    font-size: 15px; font-weight: 600; letter-spacing: -0.2px;
+    color: #fff;
+  }
+  .order ol li .t a { color: #fff; text-decoration: none; border-bottom: 0.5px solid rgba(255,255,255,0.3); }
+  .order ol li .t a:hover { border-bottom-color: #fff; }
+  .order ol li .d {
+    font-size: 13px; color: rgba(255,255,255,0.7);
+    margin-top: 3px;
+  }
+  .order ol li .d code {
+    background: rgba(255,255,255,0.1); padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+  }
+
+  /* Sections */
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+    margin: 48px 0 16px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 22px 24px;
+    text-decoration: none; color: inherit;
+    display: block;
+    border: 0.5px solid var(--line);
+    transition: transform 180ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 180ms;
+    position: relative;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+    border-color: rgba(0,0,0,0.15);
+  }
+  .card .tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+    text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+    background: rgba(0,122,255,0.1); color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .card .tag.doc { background: rgba(255,149,0,0.12); color: var(--orange); }
+  .card .tag.flow { background: rgba(52,199,89,0.12); color: var(--green); }
+  .card .tag.code { background: rgba(175,82,222,0.12); color: #af52de; }
+  .card .ico {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+  .card h3 {
+    margin: 0;
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 19px; font-weight: 700; letter-spacing: -0.4px;
+  }
+  .card p {
+    font-size: 13.5px; color: #515154;
+    margin: 6px 0 12px; line-height: 1.55;
+  }
+  .card .meta {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding-top: 10px;
+    border-top: 0.5px solid var(--line);
+  }
+  .card .meta b { color: var(--text); font-weight: 600; }
+
+  /* Full-bleed primary cards */
+  .card.primary {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #ffffff 0%, #f9f9fb 100%);
+  }
+
+  /* Folder tree */
+  .tree {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-top: 16px;
+    border: 0.5px solid var(--line);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .tree .c { color: var(--muted); }
+  .tree .b { color: var(--accent); font-weight: 600; }
+  .tree .d { color: var(--red); font-weight: 600; }
+
+  /* MVP scope note */
+  .mvp-note {
+    background: #fff8e1;
+    border: 0.5px solid #ffd66b;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex; gap: 12px;
+    align-items: flex-start;
+  }
+  .mvp-note .ic {
+    width: 24px; height: 24px; border-radius: 999px;
+    background: var(--orange); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; flex-shrink: 0;
+    font-size: 13px;
+  }
+  .mvp-note .body { font-size: 13px; color: #5e4e1f; line-height: 1.5; }
+  .mvp-note .body b { color: var(--text); }
+  .mvp-note .body code {
+    background: rgba(255,200,90,0.3); padding: 1px 5px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px;
+  }
+
+  footer.foot {
+    margin-top: 64px; padding-top: 22px;
+    border-top: 0.5px solid var(--line);
+    font-size: 12px; color: var(--muted);
+    text-align: center; line-height: 1.7;
+  }
+  footer.foot code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    background: var(--paper); padding: 2px 6px; border-radius: 4px;
+    border: 0.5px solid var(--line);
+  }
+
+  @media (max-width: 720px) {
+    header.hero h1 { font-size: 36px; }
+    .grid { grid-template-columns: 1fr; }
+    .card.primary { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="codename">Codename · agentNews · MVP · Handoff Bundle</div>
+    <h1>DailyNews</h1>
+    <p class="sub">
+      Claude Code (또는 사람 개발자) 가 단독으로 읽고 React Native + NativeWind + React Navigation 으로 구현할 수 있도록 정리한 핸드오프 번들. 디자인 reference, 사용자 여정, 구현 사양 한 곳에.
+    </p>
+    <div class="pill-row">
+      <span class="pill"><span class="dot" style="background:var(--green)"></span><b>MVP</b> · 5 핵심 플로우</span>
+      <span class="pill">화면 9 · 토큰 / API / 위장 규칙</span>
+      <span class="pill">SF Pro · 8pt grid · iPhone 14</span>
+      <span class="pill">Hi-fidelity · 픽셀 단위 정확</span>
+    </div>
+  </header>
+
+  <!-- MVP SCOPE NOTE -->
+  <div class="mvp-note">
+    <div class="ic">i</div>
+    <div class="body">
+      <b>MVP 범위.</b> 잠금 코드 (시퀀스) 와 페어 (1:1) 는 <b>관리자가 DB 에 직접 등록</b> — 앱 내 설정 UI 없음.
+      서버 상수: <code>SEQUENCE = [5, 3, 1, 7]</code> · <code>pairs (user_a, user_b)</code>. 향후 마이그레이션 예정.
+    </div>
+  </div>
+
+  <!-- READING ORDER -->
+  <div class="order">
+    <div class="label">권장 읽기 순서</div>
+    <h2>이 순서대로 읽으면 30분 안에 구현 시작 가능</h2>
+    <ol>
+      <li>
+        <div>
+          <div class="t"><a href="README.md">README.md</a></div>
+          <div class="d">전체 사양 — 컨셉, 위장 규칙, 디자인 토큰, 화면별 레이아웃, API 계약, 상태 머신, 데이터 모델. <code>724 lines / 23 KB</code></div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="t"><a href="storyboard.html">storyboard.html</a></div>
+          <div class="d">5 핵심 플로우 frame-by-frame — 위장 진입 · 위장 알림 · 첨부 · 회원가입 · 프로필+데이터삭제. 사용자 행동 + 시스템 응답.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="t"><a href="designs/index.html">designs/index.html</a></div>
+          <div class="d">디자인 진입점 — 모든 화면이 카드로 정리. 클릭하면 인터랙티브 프로토타입.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="t">개별 화면 프로토타입</div>
+          <div class="d">픽셀 단위로 측정할 때 사용. <code>D</code> 키 = 시퀀스 트래커 디버그 패널 (NewsFeedScreen).</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="t">designs/screens/*.jsx</div>
+          <div class="d">참고용 React 컴포넌트 — TypeScript + RN 으로 옮길 때 로직 (특히 시퀀스 트래커, 버블 grouping) 참조.</div>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <!-- DOC -->
+  <div class="section-label">설명서 · Documentation</div>
+  <div class="grid">
+
+    <a class="card primary" href="README.md">
+      <div class="tag doc">README · 단독 구현 가능</div>
+      <h3>전체 구현 사양</h3>
+      <p>컨셉 → 위장 규칙 → 토큰 → 화면별 사양 → 인터랙션 → API → 상태 머신 → 데이터 모델 → 테스트 케이스. Claude Code 가 이 한 파일만으로 구현 시작 가능.</p>
+      <div class="meta"><b>14 sections</b> · 디자인 토큰 / 5 화면 / 6 인터랙션 / API 계약 / Disguise 규칙</div>
+    </a>
+
+    <a class="card" href="storyboard.html">
+      <div class="tag flow">Storyboard · 5 flows</div>
+      <h3>사용자 여정</h3>
+      <p>각 플로우의 frame-by-frame 분해. 사용자 탭 / 화면 전이 / 시스템 응답을 한눈에.</p>
+      <div class="meta"><b>5 flows</b> · 24 frames</div>
+    </a>
+
+    <a class="card" href="designs/index.html">
+      <div class="tag">Design Index</div>
+      <h3>모든 화면 한 곳에</h3>
+      <p>화면별 카드. 클릭하면 인터랙티브 프로토타입으로 진입.</p>
+      <div class="meta"><b>6 designs</b> · iPhone 14 frame</div>
+    </a>
+
+  </div>
+
+  <!-- DESIGNS -->
+  <div class="section-label">화면 · Designs</div>
+  <div class="grid">
+
+    <a class="card" href="designs/LoginScreen.html">
+      <div class="tag">P0 · Login</div>
+      <h3>로그인 · 3 states</h3>
+      <p>기본 / 실패 / 로딩. 이메일 + 비밀번호 · 평범한 뉴스 앱 로그인 패턴.</p>
+      <div class="meta"><b>3 states</b> · 폼 검증</div>
+    </a>
+
+    <a class="card" href="designs/RegisterScreen.html">
+      <div class="tag">P0 · Register</div>
+      <h3>회원가입 · 5 validation</h3>
+      <p>4개 입력 + 4 에러 시나리오 (이메일 / ID / 비번 / 불일치) + 통과 싁태.</p>
+      <div class="meta"><b>5 states</b> · Live validation</div>
+    </a>
+
+    <a class="card" href="designs/NewsFeedScreen.html">
+      <div class="tag">01 · NewsFeed</div>
+      <h3>메인 뉴스 피드</h3>
+      <p>DailyNews 워드마크 (탭 → ARM, 외관 변화 0) + 카테고리 칩 + Hero + 6장 카드.</p>
+      <div class="meta"><b>인터랙티브</b> · ARM + Silent sequence</div>
+    </a>
+
+    <a class="card" href="designs/ArticleDetailScreen.html">
+      <div class="tag">02 + 03 · ArticleDetail</div>
+      <h3>기사 상세 + 채팅 swap</h3>
+      <p>같은 RN 스크린이 unlock 상태에 따라 일반 / 채팅 모드 conditional render. 헤더 동일.</p>
+      <div class="meta"><b>2 modes</b> · 일반 · 채팅 swap</div>
+    </a>
+
+    <a class="card" href="designs/PushNotifications.html">
+      <div class="tag">04 · Notifications</div>
+      <h3>위장 푸시 알림</h3>
+      <p>iOS lock + iOS in-app banner + Android lock. notification payload only, data 0.</p>
+      <div class="meta"><b>3 variants</b> · iOS / Android / banner</div>
+    </a>
+
+    <a class="card" href="designs/SettingsScreen.html">
+      <div class="tag">05 · Settings</div>
+      <h3>설정</h3>
+      <p>iOS 그룹드 리스트. 프로필 / 계정 / 앱. 시퀀스 변경 모달은 MVP 범위 외 — 참고용.</p>
+      <div class="meta"><b>그룹드 리스트</b></div>
+    </a>
+
+    <a class="card" href="designs/ProfileEditScreen.html">
+      <div class="tag">P0 · ProfileEdit</div>
+      <h3>프로필 편집 + 데이터 삭제</h3>
+      <p>닉네임 / @ID(read-only) / 상태모마지 + 위험구역의 데이터 삭제 CTA → 모달 (인터랙티브).</p>
+      <div class="meta"><b>2 화면</b> · 편집 + 삭제 모달</div>
+    </a>
+
+    <a class="card primary" href="designs/ComponentsReference.html">
+      <div class="tag doc">P1 · Components Reference</div>
+      <h3>구성 요소 사양 · 5 spec sections</h3>
+      <p>첨부 chip (3-state) + bubble preview (image / PDF) + 빈 상태 (skeleton / 제로) + App Switcher 위장 swap + 메시지 전송 실패+재시도. 독립 조립 가능한 머스탤드 수준.</p>
+      <div class="meta"><b>5 sections</b> · All states + tokens + native bridge notes</div>
+    </a>
+
+  </div>
+
+  <!-- CODE REFERENCE -->
+  <div class="section-label">코드 참조 · Source Files</div>
+  <div class="grid">
+    <a class="card" href="designs/screens/news-feed-screen.jsx">
+      <div class="tag code">JSX · Logic</div>
+      <h3>NewsFeedScreen 컴포넌트</h3>
+      <p>워드마크 ARM 토글 + 8초 타이머 + 시퀀스 트래커 로직. TypeScript + RN 으로 그대로 옮길 수 있는 구조.</p>
+      <div class="meta">React + inline styles · ARM gate</div>
+    </a>
+    <a class="card" href="designs/screens/shared.jsx">
+      <div class="tag code">JSX · Tokens</div>
+      <h3>공유 토큰 + 아이콘</h3>
+      <p>색상 / 폰트 / 아이콘 (SVG inline). Tailwind config 의 source of truth.</p>
+      <div class="meta">DN_COLORS · DN_FONT · DNIcon</div>
+    </a>
+  </div>
+
+  <!-- FOLDER TREE -->
+  <div class="section-label">파일 구조 · Files</div>
+  <div class="tree"><span class="c"># 핸드오프 번들 구조</span>
+design_handoff_dailynews_mvp/
+├── <span class="b">README.md</span>                           <span class="c"># 전체 구현 사양 (먼저 읽기)</span>
+├── <span class="b">handoff.html</span>                        <span class="c"># 이 페이지 — 번들 진입점</span>
+├── <span class="b">storyboard.html</span>                     <span class="c"># 사용자 여정 다이어그램</span>
+└── <span class="d">designs/</span>
+    ├── index.html                      <span class="c"># 모든 화면 카탈로그</span>
+    ├── NewsFeedScreen.html             <span class="c"># 메인 피드 (인터랙티브)</span>
+    ├── ArticleDetailScreen.html        <span class="c"># 일반 + 채팅 swap</span>
+    ├── PushNotifications.html          <span class="c"># 알림 (iOS/Android)</span>
+    ├── SettingsScreen.html             <span class="c"># 설정 + 프로필</span>
+    ├── <span class="d">frames/</span>
+    │   ├── ios-frame.jsx               <span class="c"># iPhone 14 chrome</span>
+    │   └── android-frame.jsx
+    └── <span class="d">screens/</span>
+        ├── shared.jsx                  <span class="c"># 토큰 + 아이콘</span>
+        ├── news-feed-screen.jsx        <span class="c"># ARM + 시퀀스 로직</span>
+        ├── article-detail-screen.jsx   <span class="c"># 버블 grouping</span>
+        ├── push-notification-preview.jsx
+        ├── settings-screen.jsx
+        └── pairing-search-screen.jsx   <span class="c"># MVP 범위 외 (참고)</span></div>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div>DailyNews · agentNews MVP · 2026.05.24</div>
+    <div style="margin-top:6px">
+      개발 환경: React Native · NativeWind · React Navigation v6+
+      <br/>
+      디자인 토큰: SF Pro · 8pt grid · iOS system colors · 390×844 iPhone 14
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { apiFetch, ApiError } from '../services/api';
 import { secureStore } from '../services/secureStore';
+import {
+  registerPushTokenWithBackend,
+  resetPushRegistrationCache,
+} from '../services/pushRegistration';
 
 export interface AuthUser {
   externalId: string;
@@ -71,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           refreshToken,
           status: 'authenticated',
         });
+        // 부팅 후 push token 등록 (silent)
+        void registerPushTokenWithBackend(accessToken);
       } else {
         setState((s) => ({ ...s, status: 'unauthenticated' }));
       }
@@ -101,6 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshToken: res.refreshToken,
       status: 'authenticated',
     });
+    // push token 백엔드 등록 (fire-and-forget)
+    void registerPushTokenWithBackend(res.accessToken);
   }
 
   const value: AuthContextValue = useMemo(
@@ -120,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async logout() {
         const rt = state.refreshToken;
         await secureStore.clear();
+        resetPushRegistrationCache();
         setState({ user: null, accessToken: null, refreshToken: null, status: 'unauthenticated' });
         if (rt) {
           try {

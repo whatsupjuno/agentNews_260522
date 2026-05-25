@@ -31,8 +31,9 @@
         "backgroundColor": "#f5f5f7"
       },
       "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "POST_NOTIFICATIONS"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -42,7 +43,11 @@
       "expo-secure-store"
     ],
     "extra": {
-      "apiBaseUrl": "http://localhost:3000/api/v1"
-    }
+      "apiBaseUrl": "http://localhost:3000/api/v1",
+      "eas": {
+        "projectId": "9fa59ec8-bd44-456b-b0cf-7703db725c15"
+      }
+    },
+    "owner": "whatsupjuno"
   }
 }

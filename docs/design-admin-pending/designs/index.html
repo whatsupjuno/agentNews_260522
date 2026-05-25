@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews · agentNews — Mockup Index</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --accent: #007aff;
+    --red: #ff3b30;
+    --separator: rgba(60,60,67,0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 64px 32px 96px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    display: grid; grid-template-columns: 1fr auto; gap: 40px;
+    align-items: flex-end;
+    margin-bottom: 56px;
+    padding-bottom: 32px;
+    border-bottom: 0.5px solid var(--separator);
+  }
+  .codename {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--red); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: 64px; font-weight: 800; letter-spacing: -2px;
+    margin: 0; line-height: 0.95;
+  }
+  .hero .sub {
+    font-size: 18px; color: #515154;
+    margin-top: 14px; max-width: 520px; line-height: 1.5;
+  }
+  .hero .meta {
+    display: flex; gap: 24px; margin-top: 22px;
+    font-size: 12px; color: var(--muted);
+    letter-spacing: 0.3px;
+  }
+  .hero .meta b { color: var(--text); font-weight: 600; }
+
+  .glance {
+    background: var(--text); color: #fff;
+    border-radius: 18px;
+    padding: 22px 24px;
+    min-width: 240px;
+    font-size: 13px; line-height: 1.55;
+  }
+  .glance .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.6px;
+    color: rgba(255,255,255,0.5); text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .glance .row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0;
+    border-top: 0.5px solid rgba(255,255,255,0.12);
+  }
+  .glance .row:first-of-type { border-top: none; }
+  .glance .row span:last-child {
+    color: rgba(255,255,255,0.85);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+  }
+
+  /* ── Section ── */
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .section + .section { margin-top: 56px; }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: 18px;
+    overflow: hidden;
+    text-decoration: none; color: inherit;
+    display: block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 180ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 180ms;
+    position: relative;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.1);
+  }
+  .card-canvas {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 0.5px solid var(--separator);
+  }
+  .card-body { padding: 16px 18px 18px; }
+  .card-num {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .card-title {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.4px;
+    margin: 0;
+  }
+  .card-desc {
+    font-size: 13.5px; color: #515154;
+    margin-top: 6px; line-height: 1.5;
+  }
+  .card-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 12px;
+  }
+  .tag {
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.3px;
+    padding: 3px 8px; border-radius: 999px;
+    background: #f1f1f3; color: #515154;
+  }
+
+  /* ── Thumb canvas backgrounds ── */
+  .thumb {
+    position: absolute; inset: 0;
+    overflow: hidden;
+  }
+  .thumb-phone {
+    position: absolute; left: 50%; top: 20px; transform: translateX(-50%);
+    width: 160px; height: 320px;
+    background: #fff;
+    border-radius: 22px;
+    border: 4px solid #1d1d1f;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+  }
+  .thumb-phone .notch {
+    width: 50px; height: 14px; border-radius: 0 0 8px 8px;
+    background: #1d1d1f; margin: 0 auto;
+  }
+
+  /* Thumb 1 — feed */
+  .thumb-feed { padding: 8px; background: #f5f5f7; height: 100%; }
+  .thumb-feed .h { font-size: 14px; font-weight: 800; letter-spacing: -0.5px; }
+  .thumb-feed .h .date { color: #ff3b30; font-size: 7px; letter-spacing: 1px; }
+  .thumb-feed .hero {
+    margin-top: 4px; height: 60px; border-radius: 6px;
+    background: repeating-linear-gradient(135deg, #dbe5d3 0 5px, #c8d2c0 5px 10px);
+    grid-template-columns: none; padding: 0; border: none;
+  }
+  .thumb-feed .ttl { font-size: 8px; font-weight: 600; margin-top: 4px; line-height: 1.2; }
+  .thumb-feed .row {
+    display: flex; gap: 4px; margin-top: 4px;
+    background: #fff; padding: 4px; border-radius: 5px;
+  }
+  .thumb-feed .row .tx { flex: 1; font-size: 6px; font-weight: 600; line-height: 1.2; }
+  .thumb-feed .row .img {
+    width: 30px; height: 30px; border-radius: 4px; flex-shrink: 0;
+  }
+
+  /* Thumb 2 — article */
+  .thumb-art .img {
+    height: 90px;
+    background: repeating-linear-gradient(135deg, #ece2d1 0 5px, #dcd2c0 5px 10px);
+  }
+  .thumb-art .body { padding: 8px; }
+  .thumb-art .cat { font-size: 6px; color: #007aff; font-weight: 700; letter-spacing: 1px; }
+  .thumb-art .ttl { font-size: 10px; font-weight: 800; line-height: 1.15; margin-top: 3px; letter-spacing: -0.3px; }
+  .thumb-art .par {
+    height: 4px; margin-top: 4px; background: #e5e5ea; border-radius: 2px;
+  }
+  .thumb-art .par.s { width: 70%; }
+
+  /* Thumb 3 — chat */
+  .thumb-chat { padding: 10px 6px; }
+  .thumb-chat .pin {
+    background: #f5f5f7; padding: 4px 6px; border-radius: 4px;
+    font-size: 6px; font-weight: 600; color: #515154;
+  }
+  .thumb-chat .bub {
+    margin-top: 6px; padding: 4px 7px;
+    font-size: 7px; border-radius: 8px;
+    max-width: 70%; line-height: 1.3;
+  }
+  .thumb-chat .bub.peer { background: #e9e9eb; color: #1d1d1f; }
+  .thumb-chat .bub.me { background: #007aff; color: #fff; margin-left: auto; }
+
+  /* Thumb 4 — search */
+  .thumb-search .input {
+    margin: 8px; padding: 5px 8px;
+    background: #f1f1f3; border-radius: 6px;
+    font-size: 7px; color: #86868b;
+  }
+  .thumb-search .item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 8px;
+  }
+  .thumb-search .av {
+    width: 18px; height: 18px; border-radius: 999px;
+    background: linear-gradient(135deg, #c9d6e3, #93a4b6);
+    flex-shrink: 0;
+  }
+  .thumb-search .info { flex: 1; font-size: 6px; }
+  .thumb-search .info .n { font-weight: 600; }
+  .thumb-search .pill {
+    font-size: 5.5px; padding: 2px 5px;
+    background: #007aff; color: #fff; border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* Thumb 5 — push */
+  .thumb-push {
+    background:
+      radial-gradient(circle at 30% 0%, #3a4d6b 0%, #1a2238 45%, #0b0f1f 100%);
+    color: #fff; height: 100%;
+    position: relative;
+  }
+  .thumb-push .time {
+    text-align: center;
+    font-size: 30px; font-weight: 300; letter-spacing: -1.5px;
+    margin-top: 40px;
+  }
+  .thumb-push .notif {
+    margin: 0 8px; margin-top: 70px;
+    background: rgba(255,255,255,0.18);
+    padding: 6px;
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: 6px;
+  }
+  .thumb-push .notif .app { font-weight: 600; font-size: 5.5px; letter-spacing: 0.3px; }
+  .thumb-push .notif .body { margin-top: 3px; line-height: 1.3; }
+
+  /* Thumb 6 — settings */
+  .thumb-set { padding: 6px; background: #f5f5f7; height: 100%; }
+  .thumb-set .prof {
+    background: #fff; padding: 6px;
+    border-radius: 6px;
+    display: flex; gap: 5px; align-items: center;
+  }
+  .thumb-set .prof .av {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: linear-gradient(135deg, #c7d2dd, #93a4b6);
+  }
+  .thumb-set .prof .info { font-size: 6px; }
+  .thumb-set .prof .info b { font-weight: 600; }
+  .thumb-set .grp {
+    background: #fff; margin-top: 5px; border-radius: 5px;
+    overflow: hidden;
+  }
+  .thumb-set .row {
+    padding: 4px 6px;
+    border-top: 0.5px solid #e5e5ea;
+    font-size: 6px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .thumb-set .row:first-child { border-top: none; }
+  .thumb-set .row .ic {
+    width: 10px; height: 10px; border-radius: 2px;
+  }
+
+  /* Disguise callout */
+  .disguise {
+    margin-top: 56px;
+    background: var(--text); color: #fff;
+    border-radius: 22px;
+    padding: 32px 36px;
+  }
+  .disguise h2 {
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif;
+    font-size: 26px; font-weight: 700; letter-spacing: -0.5px;
+    margin: 0 0 14px;
+  }
+  .disguise .grid2 {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+    margin-top: 18px;
+  }
+  .disguise .rule {
+    font-size: 13.5px; line-height: 1.5;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.92);
+  }
+  .disguise .rule b { color: #fff; font-weight: 600; }
+  .disguise code {
+    background: rgba(255,255,255,0.1);
+    padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+  }
+
+  footer {
+    margin-top: 64px; padding-top: 24px;
+    border-top: 0.5px solid var(--separator);
+    font-size: 12px; color: var(--muted);
+    text-align: center;
+  }
+
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; align-items: stretch; }
+    .hero h1 { font-size: 44px; }
+    .grid { grid-template-columns: 1fr; }
+    .disguise .grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div>
+      <div class="codename">Codename · agentNews</div>
+      <h1>DailyNews</h1>
+      <p class="sub">
+        평범한 뉴스 앱처럼 보이지만, 정확한 순서로 카드를 탭하면 1:1 비공개 대화로 전환되는 위장 SaaS.
+        High-fidelity 화면 6종, iPhone 14 frame, 디자인 토큰은 brief 그대로 적용.
+      </p>
+      <div class="meta">
+        <span><b>플랫폼</b> · iOS + Android</span>
+        <span><b>토큰</b> · #f5f5f7 / #007aff</span>
+        <span><b>그리드</b> · 8pt</span>
+      </div>
+    </div>
+    <aside class="glance">
+      <div class="label">At a glance</div>
+      <div class="row"><span>화면</span><span>6</span></div>
+      <div class="row"><span>위장 진입</span><span>5 → 3 → 1 → 7</span></div>
+      <div class="row"><span>채팅 라우트</span><span>ArticleDetailScreen</span></div>
+      <div class="row"><span>알림 payload</span><span>headline only</span></div>
+      <div class="row"><span>앱 어휘</span><span>chat / secret 0</span></div>
+    </aside>
+  </header>
+
+  <!-- STORYBOARD CTA -->
+  <a href="Storyboard.html" style="display:block;text-decoration:none;color:inherit;margin-bottom:32px">
+    <div style="background:linear-gradient(135deg,#007aff 0%,#0050d3 100%);color:#fff;border-radius:22px;padding:28px 32px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;box-shadow:0 10px 30px rgba(0,122,255,0.25);transition:transform 200ms cubic-bezier(0.2,0.8,0.2,1)" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:8px">Storyboards · MVP · 5 flows / 24 frames</div>
+        <div style="font-family:-apple-system,'SF Pro Display',sans-serif;font-size:30px;font-weight:800;letter-spacing:-0.8px;margin:0 0 6px;line-height:1.05">MVP 핵심 플로우 스토리보드 →</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.88);line-height:1.5;max-width:560px">위장 진입 · 위장 알림 · 첨부 · 회원가입 · 프로필+데이터삭제 — 5단계 사용자 여정을 frame-by-frame으로 분해.</div>
+      </div>
+      <div style="font-size:48px;font-weight:300;opacity:0.8">→</div>
+    </div>
+  </a>
+
+  <!-- MVP SCOPE NOTE -->
+  <div style="background:#fff8e1;border:0.5px solid #ffd66b;border-radius:14px;padding:16px 20px;margin-bottom:56px;display:flex;gap:16px;align-items:flex-start">
+    <div style="width:28px;height:28px;border-radius:999px;background:#ff9500;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">i</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:600;color:#1d1d1f;margin-bottom:4px">MVP 범위 안내</div>
+      <div style="font-size:13px;color:#5e4e1f;line-height:1.55">아래 6개 아티팩트 중 <b>NewsFeed · ArticleDetail · PushNotifications · Settings</b>가 MVP 범위.
+      <b>PairingSearch</b>와 <b>Settings의 시퀀스 변경 모달</b>은 참고용 — 실제 MVP에선 페어링 / 잠금 코드 변경 모두 <b>DB 직접 관리</b>로 처리됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ARTIFACT GRID -->
+  <section class="section">
+    <div class="section-label">Artifacts · 09</div>
+    <div class="grid">
+
+      <!-- Auth row -->
+      <a class="card" href="LoginScreen.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#e6e6ea">
+            <div class="thumb-phone" style="height:340px">
+              <div class="notch"></div>
+              <div style="padding:20px 12px;background:#fff;height:100%;text-align:center">
+                <div style="width:30px;height:30px;border-radius:7px;background:linear-gradient(140deg,#fff 0%,#f0f0f3 100%);margin:18px auto 10px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);font-family:Georgia,serif;font-weight:900;color:#1d1d1f;letter-spacing:-1px;font-size:18px">N</div>
+                <div style="font-size:14px;font-weight:800;letter-spacing:-0.5px">DailyNews</div>
+                <div style="font-size:6.5px;color:#86868b;margin-top:3px">매일의 뉴스를 한 곳에서</div>
+                <div style="margin-top:22px;background:#f5f5f7;padding:5px 6px;border-radius:4px;font-size:6.5px;color:#86868b;text-align:left">이메일</div>
+                <div style="margin-top:5px;background:#f5f5f7;padding:5px 6px;border-radius:4px;font-size:6.5px;color:#86868b;text-align:left">비밀번호</div>
+                <div style="margin-top:10px;background:#007aff;color:#fff;padding:6px;border-radius:4px;font-size:8px;font-weight:600">로그인</div>
+                <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:6.5px;color:#86868b"><span>비밀번호 찾기</span><span style="color:#007aff;font-weight:600">회원가입</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">P0 — LoginScreen</div>
+          <h3 class="card-title">로그인 · 3 states</h3>
+          <p class="card-desc">기본 / 실패 / 로딩 — 평범한 뉴스 앱 로그인 패턴. 에러 시 빨간 보더 + 12/500 메시지.</p>
+          <div class="card-tags">
+            <span class="tag">3 states</span>
+            <span class="tag">Form validation</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="RegisterScreen.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#e6e6ea">
+            <div class="thumb-phone" style="height:340px;left:30%">
+              <div class="notch"></div>
+              <div style="padding:18px 10px 8px;background:#fff;height:100%;font-size:6.5px">
+                <div style="font-weight:600;text-align:center;font-size:7px">회원가입</div>
+                <div style="font-weight:700;font-size:9px;letter-spacing:-0.3px;margin-top:8px">계정 만들기</div>
+                <div style="margin-top:6px;background:#f5f5f7;padding:4px;border-radius:3px;color:#1d1d1f">jun@daily.com</div>
+                <div style="margin-top:4px;background:#f5f5f7;padding:4px;border-radius:3px;color:#1d1d1f">junkyu_2026</div>
+                <div style="margin-top:4px;background:#f5f5f7;padding:4px;border-radius:3px;border:0.5px solid #ff3b30;color:#1d1d1f">••••••</div>
+                <div style="color:#ff3b30;font-size:5px;margin-top:2px;font-weight:500">비밀번호는 8자 이상이어야 합니다</div>
+                <div style="margin-top:4px;background:#f5f5f7;padding:4px;border-radius:3px;color:#86868b">비밀번호 다시 입력</div>
+                <div style="margin-top:8px;background:#e5e5ea;color:#86868b;padding:5px;border-radius:3px;font-size:7px;font-weight:600;text-align:center">회원가입</div>
+              </div>
+            </div>
+            <div class="thumb-phone" style="height:340px;left:70%">
+              <div class="notch"></div>
+              <div style="padding:18px 10px 8px;background:#fff;height:100%;font-size:6.5px">
+                <div style="font-weight:600;text-align:center;font-size:7px">회원가입</div>
+                <div style="font-weight:700;font-size:9px;letter-spacing:-0.3px;margin-top:8px">계정 만들기</div>
+                <div style="margin-top:6px;background:#f5f5f7;padding:4px;border-radius:3px">jun@daily.com</div>
+                <div style="margin-top:4px;background:#f5f5f7;padding:4px;border-radius:3px">junkyu_2026</div>
+                <div style="margin-top:4px;background:#f5f5f7;padding:4px;border-radius:3px">••••••••</div>
+                <div style="margin-top:4px;background:#f5f5f7;padding:4px;border-radius:3px">••••••••</div>
+                <div style="margin-top:8px;background:#007aff;color:#fff;padding:5px;border-radius:3px;font-size:7px;font-weight:600;text-align:center">회원가입</div>
+                <div style="margin-top:6px;font-size:6px;color:#28a745;text-align:center">✓ 모두 통과</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">P0 — RegisterScreen</div>
+          <h3 class="card-title">회원가입 · 5 validation</h3>
+          <p class="card-desc">이메일 / 사용자 ID / 비번 / 비번 확인 → 4가지 에러 상태 + 통과 상태. CTA 동적 활성/비활성.</p>
+          <div class="card-tags">
+            <span class="tag">5 states</span>
+            <span class="tag">Live validation</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="NewsFeedScreen.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#e6e6ea">
+            <div class="thumb-phone" style="height:340px">
+              <div class="notch"></div>
+              <div class="thumb-feed">
+                <div class="h"><div class="date">5월 20일 · 수요일</div>DailyNews</div>
+                <div class="hero"></div>
+                <div class="ttl">기후 정상회담, 25개국 탄소 감축 합의</div>
+                <div class="row"><div class="tx">한국은행 기준금리 동결, 시장 안도 랠리</div><div class="img" style="background:repeating-linear-gradient(135deg,#dde4ec 0 4px,#ced6df 4px 8px)"></div></div>
+                <div class="row"><div class="tx">신형 EV 배터리 8분 충전, 512km 검증</div><div class="img" style="background:repeating-linear-gradient(135deg,#d3dde6 0 4px,#c1cad3 4px 8px)"></div></div>
+                <div class="row"><div class="tx">K-드라마 글로벌 OTT 1위 달성</div><div class="img" style="background:repeating-linear-gradient(135deg,#e7ddea 0 4px,#d3ccd8 4px 8px)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">01 — NewsFeedScreen</div>
+          <h3 class="card-title">메인 피드 · Hero + 6 cards</h3>
+          <p class="card-desc">DailyNews 워드마크 (탭 → ARM, 외관 변화 0) · 카테고리 칩 · pull-to-refresh · 숨은 5→3→1→7 트리거.</p>
+          <div class="card-tags">
+            <span class="tag">Interactive</span>
+            <span class="tag">ARM + Sequence</span>
+            <span class="tag">Silent</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="ArticleDetailScreen.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#e6e6ea">
+            <div class="thumb-phone" style="left:30%;height:340px">
+              <div class="notch"></div>
+              <div class="thumb-art">
+                <div class="img"></div>
+                <div class="body">
+                  <div class="cat">URBAN · 사회</div>
+                  <div class="ttl">폐공장이 복합문화공간으로</div>
+                  <div class="par"></div>
+                  <div class="par s"></div>
+                  <div class="par"></div>
+                  <div class="par s"></div>
+                </div>
+              </div>
+            </div>
+            <div class="thumb-phone" style="left:70%;height:340px">
+              <div class="notch"></div>
+              <div class="thumb-chat">
+                <div class="pin">📰 토론 중 · 폐공장이 복합...</div>
+                <div class="bub peer">어제 보낸 기획안 봤어?</div>
+                <div class="bub me">방향성은 좋더라</div>
+                <div class="bub peer">3번 섹션 약한 듯</div>
+                <div class="bub me">내일 카페에서 볼래?</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">02 + 03 — ArticleDetailScreen</div>
+          <h3 class="card-title">기사 상세 + 채팅 swap</h3>
+          <p class="card-desc">같은 RN screen — unlock 시 헤더 그대로 본문만 메시지 리스트로 conditional swap.</p>
+          <div class="card-tags">
+            <span class="tag">Conditional render</span>
+            <span class="tag">Disguised header</span>
+            <span class="tag">Bubble grouping</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="PairingSearchScreen.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#e6e6ea">
+            <div class="thumb-phone" style="height:340px">
+              <div class="notch"></div>
+              <div class="thumb-search" style="background:#f5f5f7;height:100%">
+                <div class="input">@사용자ID 또는 이름</div>
+                <div style="font-size:6px;color:#86868b;padding:0 8px;letter-spacing:0.5px;font-weight:700">검색 결과 · 3</div>
+                <div style="background:#fff;margin:4px 8px;border-radius:5px">
+                  <div class="item"><div class="av"></div><div class="info"><div class="n">이지원</div>@jiwon_k</div><div class="pill">추가</div></div>
+                  <div class="item"><div class="av" style="background:linear-gradient(135deg,#dccfd6,#bfa8b3)"></div><div class="info"><div class="n">이민호</div>@minho.lee</div><div class="pill" style="background:#f1f1f3;color:#86868b">요청됨</div></div>
+                  <div class="item"><div class="av" style="background:linear-gradient(135deg,#cfddd1,#a3b6a7)"></div><div class="info"><div class="n">양사라</div>@sara_yang</div><div class="pill" style="background:#e7f7ec;color:#28a745">추가됨</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">04 — PairingSearchScreen</div>
+          <h3 class="card-title">구독자 추가 · 검색</h3>
+          <p class="card-desc">@사용자ID 검색 + 상태별 배지 (추가 / 요청됨 / 추가됨 / 다시 요청). QR 공유 카드.</p>
+          <div class="card-tags">
+            <span class="tag">Live filter</span>
+            <span class="tag">4 state pills</span>
+            <span class="tag">QR share</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="PushNotifications.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#0b0f1f">
+            <div class="thumb-phone" style="height:340px;border-color:#000">
+              <div class="notch"></div>
+              <div class="thumb-push" style="height:100%">
+                <div class="time">9:41</div>
+                <div class="notif">
+                  <div class="app">DAILYNEWS · 방금</div>
+                  <div style="font-size:7px;font-weight:600;margin-top:2px">📰 새 뉴스</div>
+                  <div class="body">AI 모델 공개 — 안전성 논쟁 가열</div>
+                  <div style="font-size:5px;opacity:0.6;margin-top:3px;letter-spacing:0.5px;font-weight:600;text-transform:uppercase">테크와이어</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">05 — Push Notifications</div>
+          <h3 class="card-title">위장 알림 · iOS + Android</h3>
+          <p class="card-desc">잠금 화면 · in-app 배너 · Android 알림 카드. <b>data payload 0</b> — 헤드라인만 노출.</p>
+          <div class="card-tags">
+            <span class="tag">iOS Lock</span>
+            <span class="tag">iOS Banner</span>
+            <span class="tag">Android M3</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="SettingsScreen.html" style="grid-column: span 2;">
+        <div class="card-canvas" style="height:240px">
+          <div class="thumb" style="background:#e6e6ea;display:flex;justify-content:center;align-items:flex-start;gap:24px;padding-top:20px">
+            <div style="position:relative;width:160px;height:200px;background:#fff;border-radius:22px;border:4px solid #1d1d1f;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,0.18)">
+              <div class="notch"></div>
+              <div class="thumb-set">
+                <div class="prof"><div class="av"></div><div class="info"><b>전준규</b><br/>@junkyu_2026</div></div>
+                <div class="grp">
+                  <div class="row"><div class="ic" style="background:#8e8e93"></div>프로필 편집</div>
+                  <div class="row"><div class="ic" style="background:#5856d6"></div>비밀번호 변경</div>
+                </div>
+                <div class="grp">
+                  <div class="row"><div class="ic" style="background:#1d1d1f"></div>콘텐츠 잠금 코드</div>
+                  <div class="row"><div class="ic" style="background:#ff9500"></div>잠금 해제 도움말</div>
+                  <div class="row"><div class="ic" style="background:#af52de"></div>구독자 관리</div>
+                </div>
+              </div>
+            </div>
+            <div style="position:relative;width:160px;height:200px;background:#fff;border-radius:22px;border:4px solid #1d1d1f;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,0.18)">
+              <div class="notch"></div>
+              <div style="background:rgba(0,0,0,0.4);height:60%"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top-left-radius:12px;border-top-right-radius:12px;padding:6px 8px;height:60%">
+                <div style="width:14px;height:2px;background:rgba(0,0,0,0.2);border-radius:99px;margin:2px auto 6px"></div>
+                <div style="font-size:7px;font-weight:600;text-align:center">콘텐츠 잠금 코드</div>
+                <div style="display:flex;justify-content:center;gap:3px;margin-top:6px">
+                  <div style="width:10px;height:10px;border-radius:2px;background:#1d1d1f;color:#fff;font-size:5px;font-weight:700;display:flex;align-items:center;justify-content:center">5</div>
+                  <div style="width:10px;height:10px;border-radius:2px;background:#1d1d1f;color:#fff;font-size:5px;font-weight:700;display:flex;align-items:center;justify-content:center">3</div>
+                  <div style="width:10px;height:10px;border-radius:2px;background:#f1f1f3;color:#c5c5c7;font-size:5px;font-weight:700;display:flex;align-items:center;justify-content:center">3</div>
+                  <div style="width:10px;height:10px;border-radius:2px;background:#f1f1f3;color:#c5c5c7;font-size:5px;font-weight:700;display:flex;align-items:center;justify-content:center">4</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:6px">
+                  <div style="height:14px;border-radius:2px;background:repeating-linear-gradient(135deg,#dbe5d3 0 3px,#c8d2c0 3px 6px);grid-column:span 2;outline:1px solid #007aff;outline-offset:-1px"></div>
+                  <div style="height:8px;border-radius:2px;background:repeating-linear-gradient(135deg,#dde4ec 0 3px,#ced6df 3px 6px)"></div>
+                  <div style="height:8px;border-radius:2px;background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px);outline:1px solid #007aff;outline-offset:-1px"></div>
+                  <div style="height:8px;border-radius:2px;background:repeating-linear-gradient(135deg,#e7ddea 0 3px,#d3ccd8 3px 6px)"></div>
+                  <div style="height:8px;border-radius:2px;background:repeating-linear-gradient(135deg,#ece2d1 0 3px,#dcd2c0 3px 6px)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">06 — SettingsScreen + Modal</div>
+          <h3 class="card-title">설정 · 콘텐츠 잠금 코드 변경</h3>
+          <p class="card-desc">iOS 그룹드 리스트. 시퀀스 변경 모달은 7장 카드에서 4장을 순서대로 탭 — UI 자체가 사용자 시퀀스 입력.</p>
+          <div class="card-tags">
+            <span class="tag">Bottom sheet</span>
+            <span class="tag">Interactive sequence</span>
+            <span class="tag">Disguised vocabulary</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="ProfileEditScreen.html">
+        <div class="card-canvas">
+          <div class="thumb" style="background:#e6e6ea">
+            <div class="thumb-phone" style="height:340px">
+              <div class="notch"></div>
+              <div style="background:#f5f5f7;padding:6px 6px 6px;height:100%;font-size:6.5px">
+                <div style="font-weight:600;text-align:center;font-size:7px;padding:4px 0">프로필 편집</div>
+                <div style="width:30px;height:30px;border-radius:99px;background:linear-gradient(135deg,#c7d2dd,#93a4b6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;margin:10px auto 8px;font-size:11px;position:relative">
+                  JK
+                  <div style="position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:99px;background:#007aff;color:#fff;font-size:6px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid #f5f5f7">+</div>
+                </div>
+                <div style="background:#fff;border-radius:4px;padding:4px 5px;font-size:5px"><div style="color:#86868b;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;font-size:4px">닉네임</div><div style="margin-top:2px;font-weight:500;font-size:6px">전준규</div></div>
+                <div style="background:#fff;border-radius:4px;padding:4px 5px;font-size:5px;margin-top:3px"><div style="color:#86868b;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;font-size:4px">사용자 ID</div><div style="margin-top:2px;color:#86868b;font-size:6px">@junkyu_2026 (고정)</div></div>
+                <div style="color:#ff3b30;font-size:4px;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin:10px 4px 4px">위험 구역</div>
+                <div style="background:#fff;border-radius:4px;padding:4px 5px;color:#ff3b30;font-size:6px;font-weight:500">데이터 삭제</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">P0 — ProfileEditScreen</div>
+          <h3 class="card-title">프로필 편집 + 데이터 삭제</h3>
+          <p class="card-desc">96px 아바타 + 카메라 배지 · 닉네임 / @ID(read-only) / 상태 메시지 + 위험 구역의 데이터 삭제 행. 모달은 인터랙티브.</p>
+          <div class="card-tags">
+            <span class="tag">Avatar edit</span>
+            <span class="tag">Read-only ID</span>
+            <span class="tag">Destructive CTA</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="card" href="ComponentsReference.html" style="grid-column: span 2;background:linear-gradient(135deg,#fff8e1 0%,#ffffff 100%);border:0.5px solid #ffd66b">
+        <div class="card-canvas" style="height:200px;background:linear-gradient(135deg,#fff5cc 0%,#ffe9a8 100%);display:flex;justify-content:center;align-items:center;gap:20px;padding:20px">
+          <!-- Attachment chip mini -->
+          <div style="background:#fff;border-radius:8px;padding:6px 8px 6px 6px;display:flex;align-items:center;gap:6px;width:140px;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+            <div style="width:24px;height:24px;border-radius:4px;background:repeating-linear-gradient(135deg,#d3dde6 0 3px,#c1cad3 3px 6px);position:relative"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);color:#fff;font-size:5px;font-family:ui-monospace,monospace;text-align:center;padding:1px 0">62%</div></div>
+            <div style="flex:1;font-size:7px"><div style="font-weight:500">reference.png</div><div style="color:#86868b;font-size:6px;margin-top:1px">업로드 중...</div></div>
+          </div>
+          <!-- bubble pdf mini -->
+          <div style="background:#007aff;border-radius:11px;padding:2px;max-width:120px">
+            <div style="background:rgba(255,255,255,0.16);border-radius:9px;padding:5px 6px;display:flex;gap:5px;align-items:center;color:#fff;font-size:6.5px">
+              <div style="width:14px;height:18px;background:#fff;border-radius:2px;display:flex;align-items:center;justify-content:center;color:#ff3b30;font-size:5px;font-weight:800">PDF</div>
+              <div><div style="font-weight:500">기획안.pdf</div><div style="opacity:0.85;font-size:5.5px">1.2 MB</div></div>
+            </div>
+          </div>
+          <!-- empty state mini -->
+          <div style="text-align:center;color:#1d1d1f">
+            <div style="font-size:22px;margin-bottom:4px">📰</div>
+            <div style="font-size:9px;font-weight:600">아직 댓글이 없어요</div>
+            <div style="font-size:6.5px;color:#86868b;margin-top:2px">기사 토론을 시작해보세요</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-num">P1 — Components Reference</div>
+          <h3 class="card-title">구성 요소 사양 · 5 spec sections</h3>
+          <p class="card-desc">반복 컴포넌트 / 미세 상태를 한 곳에 — 첨부 chip (3-state) · bubble preview (image + PDF) · 빈 상태 (skeleton + 0개) · App Switcher 위장 swap · 메시지 전송 실패+재시도.</p>
+          <div class="card-tags">
+            <span class="tag">5 sections</span>
+            <span class="tag">All states + tokens</span>
+            <span class="tag">Native bridge notes</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- DISGUISE -->
+  <section class="disguise">
+    <h2>위장 강화 원칙</h2>
+    <p style="color:rgba(255,255,255,0.7);font-size:14px;margin:0;max-width:560px;line-height:1.55">
+      모든 화면에서 "chat / secret / agent / message" 어휘 노출 0. 외부 관찰자에게는 끝까지 평범한 뉴스 앱.
+    </p>
+    <div class="grid2">
+      <div class="rule">
+        <b>채팅 화면 위장</b> · <code>ArticleDetailScreen</code> 내부 conditional swap.
+        헤더 타이틀 = "기사 토론", placeholder = "댓글 입력", 상단 핀 = "토론 중인 기사".
+      </div>
+      <div class="rule">
+        <b>알림 위장</b> · <code>notification</code> payload만, <code>data</code> 0.
+        표시 = 앱 이름 · 헤드라인 한 줄 · 매체 · 시각. 발신자 / 미리보기 미노출.
+      </div>
+      <div class="rule">
+        <b>설정 어휘 위장</b> · 시퀀스 = <b>콘텐츠 잠금 코드</b>, 페어 = <b>구독자</b>, reset = <b>잠금 해제 도움말</b>.
+      </div>
+      <div class="rule">
+        <b>App Switcher 위장</b> · 채팅 모드에서 백그라운드 전환 시 일반 피드로 즉시 swap. 스크린샷 차단 (Android FLAG_SECURE, iOS blur).
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>DailyNews mockup · codename agentNews · iPhone 14 (390 × 844)</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

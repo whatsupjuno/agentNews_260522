@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DailyNews — Feed</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #ececef 0%, transparent 60%),
+      #e6e6ea;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .stage {
+    display: flex; align-items: center; justify-content: center;
+    gap: 32px;
+    padding: 40px;
+  }
+  .caption {
+    max-width: 280px;
+    color: #515154;
+    font-size: 13px; line-height: 1.55;
+  }
+  .caption .eyebrow {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px;
+    text-transform: uppercase; color: #86868b;
+    margin-bottom: 8px;
+  }
+  .caption h1 {
+    margin: 0 0 8px; font-size: 22px; font-weight: 700;
+    letter-spacing: -0.4px; color: #1d1d1f;
+  }
+  .caption ul {
+    list-style: none; padding: 0; margin: 12px 0 0;
+    font-size: 12px; color: #6e6e73;
+  }
+  .caption li { padding: 4px 0; border-top: 0.5px solid rgba(0,0,0,0.08); }
+  .caption li:first-child { border-top: none; }
+  .caption li b { color: #1d1d1f; font-weight: 600; }
+  .hint {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    font-size: 11.5px; line-height: 1.5;
+    color: #515154;
+  }
+  .hint b { color: #007aff; }
+  .hint code {
+    background: #f5f5f7; padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+  }
+
+  @keyframes dn-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes dn-toast-in {
+    from { transform: translate(-50%, 8px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+
+  /* hide horizontal scrollbar on category strip */
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <aside class="caption">
+    <div class="eyebrow">Artifact 01 / 06 · v3</div>
+    <h1>NewsFeedScreen</h1>
+    <p>균일 카드 그리드 (Hero 제거) · 카테고리 strip 이 시퀀스 입력 영역을 겸함.</p>
+    <p style="margin-top:8px">디자인 토큰은 brief 그대로 — #f5f5f7 / #007aff / 12·14·16 radius / SF Pro stack.</p>
+    <ul>
+      <li><b>Frame</b> · iPhone 14 — 390 × 844</li>
+      <li><b>탭</b> · 카테고리 pill (시퀀스) + 카드 (일반 열기)</li>
+      <li><b>Pull</b> · 위에서 아래로 드래그</li>
+      <li><b>위장</b> · "chat / secret / agent" 어휘 0</li>
+    </ul>
+    <div class="hint">
+      <b>2단계 위장 · v3</b>:<br/>
+      ① <b>DailyNews</b> 워드마크 탭 → ARM (8초)<br/>
+      ② 카테고리 pill 시퀀스 4탭<br/>
+      &nbsp;&nbsp;<code>문화 → 경제 → 헤드라인 → 사회</code> (5·3·1·7) → <b>채팅 모드</b><br/>
+      &nbsp;&nbsp;<code>사회 → 헤드라인 → 경제 → 문화</code> (7·1·3·5) → <b>Admin 콘솔</b><br/>
+      워드마크 외관 변화 0 · 아바타 bg 만 회색으로 미세 피드백.<br/>
+      카드 탭 = 일반 기사 열기.<br/>
+      <code>D</code> 키 = 개발자 상태 패널 (두 시퀀스 모두 표시).
+    </div>
+  </aside>
+
+  <div id="device-root"></div>
+</div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="frames/ios-frame.jsx"></script>
+<script type="text/babel" src="screens/news-feed-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react" data-screen-label="01 NewsFeed">
+  const { useEffect } = React;
+
+  function App() {
+    return (
+      <IOSDevice width={390} height={844}>
+        <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }}>
+          <NewsFeedScreen />
+        </div>
+      </IOSDevice>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('device-root')).render(<App />);
+</script>
+
+</body>
+</html>
