@@ -17,28 +17,34 @@ import { ApiError } from '../services/api';
 // SCR-001 LoginScreen — design handoff §8.1
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
+const DEMO = { userId: 'demo', password: 'demo1234' };
+
 export function LoginScreen({ navigation }: Props) {
   const auth = useAuth();
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit() {
+  async function doLogin(uid: string, pw: string) {
     if (loading) return;
     setError(null);
     setLoading(true);
     try {
-      await auth.login({ email: email.trim(), password });
+      await auth.login({ userId: uid.trim(), password: pw });
     } catch (e) {
-      if (e instanceof ApiError) {
-        setError(e.message);
-      } else {
-        setError('일시적인 오류가 발생했습니다. 잠시 후 다시 시도하세요.');
-      }
+      setError(
+        e instanceof ApiError ? e.message : '일시적인 오류가 발생했습니다. 잠시 후 다시 시도하세요.',
+      );
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onDemo() {
+    setUserId(DEMO.userId);
+    setPassword(DEMO.password);
+    await doLogin(DEMO.userId, DEMO.password);
   }
 
   return (
@@ -64,13 +70,12 @@ export function LoginScreen({ navigation }: Props) {
             <TextInput
               className="bg-bg rounded-md px-4 py-3 text-text"
               style={{ fontSize: 17 }}
-              placeholder="이메일"
+              placeholder="사용자 ID"
               placeholderTextColor="#86868b"
-              keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              value={email}
-              onChangeText={setEmail}
+              value={userId}
+              onChangeText={setUserId}
               editable={!loading}
             />
             <TextInput
@@ -92,10 +97,10 @@ export function LoginScreen({ navigation }: Props) {
           ) : null}
 
           <Pressable
-            onPress={onSubmit}
-            disabled={loading || !email || !password}
+            onPress={() => doLogin(userId, password)}
+            disabled={loading || !userId || !password}
             className="mt-6 rounded-card py-4 items-center"
-            style={{ backgroundColor: loading || !email || !password ? '#a0c7ff' : '#007aff' }}
+            style={{ backgroundColor: loading || !userId || !password ? '#a0c7ff' : '#007aff' }}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
@@ -104,6 +109,22 @@ export function LoginScreen({ navigation }: Props) {
                 로그인
               </Text>
             )}
+          </Pressable>
+
+          {/* Demo 계정 빠른 로그인 — Phase 1 데모 편의 */}
+          <Pressable
+            onPress={onDemo}
+            disabled={loading}
+            className="mt-3 rounded-card py-3 items-center"
+            style={{
+              borderWidth: 1,
+              borderColor: '#007aff',
+              backgroundColor: 'transparent',
+            }}
+          >
+            <Text className="text-accent" style={{ fontSize: 15, fontWeight: '500' }}>
+              데모 계정으로 로그인 (demo / demo1234)
+            </Text>
           </Pressable>
 
           <View className="flex-row justify-center mt-6 gap-6">

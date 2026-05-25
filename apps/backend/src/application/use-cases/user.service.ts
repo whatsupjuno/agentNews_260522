@@ -28,7 +28,7 @@ export class UserService {
     }
     return {
       externalId: agent.externalId,
-      email: agent.email,
+      userId: agent.email, // userId 가 email 컬럼에 저장됨 (Phase 1)
       nickname: agent.nickname,
       pairCount: pair ? 1 : 0,
       peer,

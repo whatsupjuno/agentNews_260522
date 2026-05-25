@@ -12,7 +12,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 interface MeResponse {
   externalId: string;
-  email: string;
+  userId: string;
   nickname: string;
   pairCount: number;
   peer: { externalId: string; nickname: string } | null;
@@ -64,7 +64,7 @@ export function SettingsScreen({ navigation }: Props) {
               {me?.nickname ?? '...'}
             </Text>
             <Text className="text-muted" style={{ fontSize: 13 }}>
-              {me?.email ?? ''}
+              @{me?.userId ?? ''}
             </Text>
             {me?.pairCount ? (
               <View className="flex-row items-center mt-1">
@@ -85,7 +85,7 @@ export function SettingsScreen({ navigation }: Props) {
           <Separator />
           <Row icon="🔒" iconBg="#5856d6" label="비밀번호 변경" />
           <Separator />
-          <Row icon="✉" iconBg="#34c759" label="이메일 변경" value={me?.email ?? ''} />
+          <Row icon="@" iconBg="#34c759" label="사용자 ID" value={`@${me?.userId ?? ''}`} trailingChevron={false} />
         </Group>
 
         {/* App group */}

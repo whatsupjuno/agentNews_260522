@@ -14,9 +14,13 @@ import {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-  user: { externalId: string; email: string; nickname: string };
+  user: { externalId: string; userId: string; nickname: string };
 }
 
+/**
+ * 인증 식별자 — DB `agents.email` 컬럼에 userId 값 저장.
+ * (Phase 1 단순화: 별도 컬럼 추가 없이 의미 변환. DDL 변경 없음.)
+ */
 @Injectable()
 export class AuthService {
   constructor(
@@ -32,57 +36,60 @@ export class AuthService {
   ) {}
 
   async register(dto: {
-    email: string;
-    password: string;
-    nickname: string;
     userId: string;
+    password: string;
+    nickname?: string;
   }): Promise<AuthTokens> {
-    const email = dto.email.toLowerCase().trim();
-    const existing = await this.agents.findOne({ where: { email, deletedAt: IsNull() } });
+    const userId = dto.userId.toLowerCase().trim();
+    const existing = await this.agents.findOne({
+      where: { email: userId, deletedAt: IsNull() },
+    });
     if (existing) {
-      throw new ConflictException({ code: 'AUTH_EMAIL_DUPLICATE', message: '이미 가입된 이메일입니다.' });
+      throw new ConflictException({
+        code: 'AUTH_USER_ID_DUPLICATE',
+        message: '이미 사용 중인 ID 입니다.',
+      });
     }
 
     const passwordHash = await this.crypto.hashPassword(dto.password);
     const externalId = this.crypto.newUuid();
+    const nickname = dto.nickname?.trim() || userId;
 
     const agent = await this.agents.save(
       this.agents.create({
         externalId,
-        email,
+        email: userId, // userId 를 email 컬럼에 저장 (의미 변환)
         passwordHash,
-        nickname: dto.nickname,
+        nickname,
         status: 'ACTIVE',
       }),
     );
 
-    // 시퀀스 row 자동 생성 (NOT_REGISTERED).
     await this.sequences.save(
       this.sequences.create({ agentId: agent.id, status: 'NOT_REGISTERED' }),
     );
 
-    // Demo mode — echo bot 자동 페어링 + [5,3,1,7] 자동 등록 + 시드 메시지 2개.
     await this.echoBot.attachToNewAgent(agent.id);
 
     return this.issueTokens(agent);
   }
 
-  async login(dto: { email: string; password: string }): Promise<AuthTokens> {
-    const email = dto.email.toLowerCase().trim();
+  async login(dto: { userId: string; password: string }): Promise<AuthTokens> {
+    const userId = dto.userId.toLowerCase().trim();
     const agent = await this.agents.findOne({
-      where: { email, status: 'ACTIVE', deletedAt: IsNull() },
+      where: { email: userId, status: 'ACTIVE', deletedAt: IsNull() },
     });
     if (!agent) {
       throw new UnauthorizedException({
         code: 'AUTH_INVALID_CREDENTIALS',
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        message: 'ID 또는 비밀번호가 올바르지 않습니다.',
       });
     }
     const ok = await this.crypto.verifyPassword(dto.password, agent.passwordHash);
     if (!ok) {
       throw new UnauthorizedException({
         code: 'AUTH_INVALID_CREDENTIALS',
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        message: 'ID 또는 비밀번호가 올바르지 않습니다.',
       });
     }
     return this.issueTokens(agent);
@@ -95,7 +102,10 @@ export class AuthService {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
       });
     } catch {
-      throw new UnauthorizedException({ code: 'AUTH_TOKEN_EXPIRED', message: '세션이 만료되었습니다.' });
+      throw new UnauthorizedException({
+        code: 'AUTH_TOKEN_EXPIRED',
+        message: '세션이 만료되었습니다.',
+      });
     }
     const stored = await this.refreshTokens.findOne({ where: { tokenJti: payload.jti } });
     if (!stored || stored.revokedAt) {
@@ -110,7 +120,6 @@ export class AuthService {
     if (!agent) {
       throw new UnauthorizedException({ code: 'AUTH_INVALID_CREDENTIALS', message: '세션 오류.' });
     }
-    // rotate
     stored.revokedAt = new Date();
     await this.refreshTokens.save(stored);
     return this.issueTokens(agent);
@@ -121,30 +130,21 @@ export class AuthService {
       const payload = await this.jwt.verifyAsync(refreshToken, {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
       });
-      await this.refreshTokens.update(
-        { tokenJti: payload.jti },
-        { revokedAt: new Date() },
-      );
+      await this.refreshTokens.update({ tokenJti: payload.jti }, { revokedAt: new Date() });
     } catch {
-      // 만료된 토큰 logout 은 silent
+      // silent
     }
   }
 
   private async issueTokens(agent: AgentEntity): Promise<AuthTokens> {
     const accessToken = await this.jwt.signAsync(
       { sub: agent.externalId, agentId: agent.id, kind: 'access' },
-      {
-        secret: this.config.get<string>('JWT_ACCESS_SECRET'),
-        expiresIn: '15m',
-      },
+      { secret: this.config.get<string>('JWT_ACCESS_SECRET'), expiresIn: '15m' },
     );
     const jti = this.crypto.newUuid();
     const refreshToken = await this.jwt.signAsync(
       { sub: agent.externalId, agentId: agent.id, jti, kind: 'refresh' },
-      {
-        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '30d',
-      },
+      { secret: this.config.get<string>('JWT_REFRESH_SECRET'), expiresIn: '30d' },
     );
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await this.refreshTokens.save(
@@ -158,7 +158,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { externalId: agent.externalId, email: agent.email, nickname: agent.nickname },
+      user: { externalId: agent.externalId, userId: agent.email, nickname: agent.nickname },
     };
   }
 }

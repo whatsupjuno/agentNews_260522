@@ -15,23 +15,20 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useAuth } from '../store/auth';
 import { ApiError } from '../services/api';
 
-// SCR-002 RegisterScreen — handoff §8.2
+// SCR-002 RegisterScreen — handoff §8.2 (Phase 1: userId + password 만)
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 interface Errors {
-  email?: string;
   userId?: string;
   password?: string;
   passwordConfirm?: string;
   global?: string;
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USER_ID_RE = /^[a-zA-Z0-9_]{4,20}$/;
 
 export function RegisterScreen({ navigation }: Props) {
   const auth = useAuth();
-  const [email, setEmail] = useState('');
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -41,7 +38,6 @@ export function RegisterScreen({ navigation }: Props) {
 
   function validate(): boolean {
     const e: Errors = {};
-    if (!EMAIL_RE.test(email.trim())) e.email = '올바른 이메일 형식이 아닙니다.';
     if (!USER_ID_RE.test(userId)) e.userId = '사용자 ID는 4-20자 영문/숫자/_만 사용 가능합니다.';
     if (password.length < 8) e.password = '비밀번호는 8자 이상이어야 합니다.';
     if (password !== passwordConfirm) e.passwordConfirm = '비밀번호가 일치하지 않습니다.';
@@ -55,16 +51,14 @@ export function RegisterScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await auth.register({
-        email: email.trim(),
-        password,
-        nickname: nickname.trim() || userId,
         userId,
+        password,
+        nickname: nickname.trim() || undefined,
       });
-      // AuthProvider 가 인증 상태 갱신 → RootNavigator 가 자동으로 NewsFeed 로 전환
     } catch (e) {
       if (e instanceof ApiError) {
-        if (e.code === 'AUTH_EMAIL_DUPLICATE') {
-          setErrors({ email: '이미 가입된 이메일입니다.' });
+        if (e.code === 'AUTH_USER_ID_DUPLICATE') {
+          setErrors({ userId: '이미 사용 중인 ID 입니다.' });
         } else {
           setErrors({ global: e.message });
         }
@@ -89,24 +83,12 @@ export function RegisterScreen({ navigation }: Props) {
             </Pressable>
           </View>
 
-          <Text className="text-text mb-6" style={{ fontSize: 28, fontWeight: '800', letterSpacing: -0.6 }}>
+          <Text
+            className="text-text mb-6"
+            style={{ fontSize: 28, fontWeight: '800', letterSpacing: -0.6 }}
+          >
             계정 만들기
           </Text>
-
-          <FieldGroup label="이메일" error={errors.email}>
-            <TextInput
-              className="bg-bg rounded-md px-4 py-3 text-text"
-              style={{ fontSize: 17 }}
-              placeholder="you@example.com"
-              placeholderTextColor="#86868b"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              onChangeText={setEmail}
-              editable={!loading}
-            />
-          </FieldGroup>
 
           <FieldGroup label="사용자 ID" error={errors.userId}>
             <TextInput
@@ -126,7 +108,7 @@ export function RegisterScreen({ navigation }: Props) {
             <TextInput
               className="bg-bg rounded-md px-4 py-3 text-text"
               style={{ fontSize: 17 }}
-              placeholder="표시될 이름"
+              placeholder="비워두면 ID 가 표시 이름"
               placeholderTextColor="#86868b"
               value={nickname}
               onChangeText={setNickname}

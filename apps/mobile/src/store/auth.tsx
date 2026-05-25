@@ -4,7 +4,7 @@ import { secureStore } from '../services/secureStore';
 
 export interface AuthUser {
   externalId: string;
-  email: string;
+  userId: string;
   nickname: string;
 }
 
@@ -16,8 +16,8 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  register(args: { email: string; password: string; nickname: string; userId: string }): Promise<void>;
-  login(args: { email: string; password: string }): Promise<void>;
+  register(args: { userId: string; password: string; nickname?: string }): Promise<void>;
+  login(args: { userId: string; password: string }): Promise<void>;
   logout(): Promise<void>;
   getValidAccessToken(): Promise<string | null>;
 }
@@ -30,7 +30,6 @@ interface AuthResponse {
   user: AuthUser;
 }
 
-/** JWT exp (초) 추출. 만료 또는 파싱 실패 시 true. */
 function isJwtExpired(token: string, marginSec = 0): boolean {
   try {
     const parts = token.split('.');
@@ -38,7 +37,6 @@ function isJwtExpired(token: string, marginSec = 0): boolean {
     const payload = parts[1];
     const padded = payload + '='.repeat((4 - (payload.length % 4)) % 4);
     const b64 = padded.replace(/-/g, '+').replace(/_/g, '/');
-    // RN 환경에 atob 존재 (Hermes 빌트인)
     const decoded = globalThis.atob ? globalThis.atob(b64) : '';
     if (!decoded) return true;
     const obj = JSON.parse(decoded) as { exp?: number };
@@ -59,16 +57,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void (async () => {
-      const [accessToken, refreshToken, externalId, email, nickname] = await Promise.all([
+      const [accessToken, refreshToken, externalId, userId, nickname] = await Promise.all([
         secureStore.get('accessToken'),
         secureStore.get('refreshToken'),
         secureStore.get('userExternalId'),
-        secureStore.get('userEmail'),
+        secureStore.get('userId'),
         secureStore.get('userNickname'),
       ]);
-      if (accessToken && refreshToken && externalId && email && nickname) {
+      if (accessToken && refreshToken && externalId && userId && nickname) {
         setState({
-          user: { externalId, email, nickname },
+          user: { externalId, userId, nickname },
           accessToken,
           refreshToken,
           status: 'authenticated',
@@ -94,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       secureStore.set('accessToken', res.accessToken),
       secureStore.set('refreshToken', res.refreshToken),
       secureStore.set('userExternalId', res.user.externalId),
-      secureStore.set('userEmail', res.user.email),
+      secureStore.set('userId', res.user.userId),
       secureStore.set('userNickname', res.user.nickname),
     ]);
     setState({
@@ -109,7 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       async register(args) {
-        const res = await apiFetch<AuthResponse>('/auth/register', { method: 'POST', body: args });
+        const res = await apiFetch<AuthResponse>('/auth/register', {
+          method: 'POST',
+          body: args,
+        });
         await persist(res);
       },
       async login(args) {
@@ -129,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       async getValidAccessToken() {
-        // 만료 30초 전이면 미리 refresh
         if (state.accessToken && !isJwtExpired(state.accessToken, 30)) {
           return state.accessToken;
         }
@@ -145,9 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           await persist(res);
           return res.accessToken;
-        } catch (e) {
-          // refresh 실패 = 어떤 종류든 (401 / network / 5xx) → 강제 로그아웃
-          // 사용자가 '인증된 상태인데 token 없음' 갇힘 방지
+        } catch {
           await forceUnauthenticated();
           return null;
         }

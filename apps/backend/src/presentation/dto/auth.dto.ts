@@ -1,27 +1,27 @@
-import { IsEmail, IsString, Length, Matches } from 'class-validator';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
+
+const USER_ID_REGEX = /^[a-zA-Z0-9_]{4,20}$/;
 
 export class RegisterDto {
-  @IsEmail()
-  email!: string;
+  @IsString()
+  @Length(4, 20)
+  @Matches(USER_ID_REGEX, { message: '사용자 ID는 4-20자 영문/숫자/_만 가능' })
+  userId!: string;
 
   @IsString()
   @Length(8, 72)
   password!: string;
 
+  @IsOptional()
   @IsString()
-  @Length(2, 40)
-  nickname!: string;
-
-  // 사용자 ID — handoff §8.2. 4-20자, 영문/숫자/_
-  @IsString()
-  @Length(4, 20)
-  @Matches(/^[a-zA-Z0-9_]+$/)
-  userId!: string;
+  @Length(1, 40)
+  nickname?: string;
 }
 
 export class LoginDto {
-  @IsEmail()
-  email!: string;
+  @IsString()
+  @Length(1, 30)
+  userId!: string;
 
   @IsString()
   @Length(1, 200)

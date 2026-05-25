@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EchoBotService } from './echo-bot.service';
+import { DemoAccountService } from './demo-account.service';
 import {
   AgentEntity,
   AgentSecretSequenceEntity,
@@ -18,7 +19,7 @@ import {
       MessageEntity,
     ]),
   ],
-  providers: [EchoBotService],
+  providers: [EchoBotService, DemoAccountService],
   exports: [EchoBotService],
 })
 export class DemoModule {}

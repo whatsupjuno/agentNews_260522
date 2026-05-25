@@ -7,7 +7,7 @@ const KEYS = {
   unlockExpiresAt: 'unlock_expires_at',
   userExternalId: 'user_external_id',
   userNickname: 'user_nickname',
-  userEmail: 'user_email',
+  userId: 'user_id',
 } as const;
 
 export type StoreKey = keyof typeof KEYS;

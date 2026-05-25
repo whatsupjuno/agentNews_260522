@@ -102,8 +102,8 @@ export function ProfileEditScreen({ navigation }: Props) {
               />
             </FieldRow>
             <FieldSeparator />
-            <FieldRow label="이메일 (고정)">
-              <Text className="text-muted" style={{ fontSize: 17 }}>{auth.user?.email}</Text>
+            <FieldRow label="사용자 ID (고정)">
+              <Text className="text-muted" style={{ fontSize: 17 }}>@{auth.user?.userId}</Text>
             </FieldRow>
             <FieldSeparator />
             <FieldRow label="상태 메시지">
