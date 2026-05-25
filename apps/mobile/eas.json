@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 13.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "http://CHANGE_ME_STAGING_HOST:3000/api/v1"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://CHANGE_ME_PROD_HOST/api/v1"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
