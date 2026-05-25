@@ -1,0 +1,35 @@
+name: Deploy to Cafe24
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/backend/**'
+      - 'packages/shared/**'
+      - 'infra/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'scripts/deploy-server.sh'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cafe24
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CAFE24_HOST }}
+          username: ${{ secrets.CAFE24_USER }}
+          key: ${{ secrets.CAFE24_SSH_KEY }}
+          port: 22
+          script_stop: true
+          command_timeout: 12m
+          script: |
+            bash /opt/apps/agentnews/scripts/deploy-server.sh
