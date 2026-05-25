@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { apiFetch, ApiError } from '../services/api';
 import { useAuth } from '../store/auth';
+import { setSequenceConfigLocal } from '../services/sequenceConfig';
 
 // Admin Screen — design-admin-pending v0.2 기반
 // 4 tab: home / users / arm / chats
@@ -347,22 +348,247 @@ function Field({ label, value }: { label: string; value: string }) {
 // ─── ARM (시퀀스 관리) ──────────────────────────────────────────────────────
 
 function ArmView({ onBack }: { onBack: () => void }) {
+  const auth = useAuth();
+  const [config, setConfig] = useState<{ chat: number[]; admin: number[] }>({
+    chat: DEFAULT_CHAT_SEQUENCE,
+    admin: DEFAULT_ADMIN_SEQUENCE,
+  });
+  const [target, setTarget] = useState<'chat' | 'admin'>('chat');
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<number[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    const token = await auth.getValidAccessToken();
+    if (!token) return;
+    try {
+      const res = await apiFetch<{ chat: number[]; admin: number[] }>(
+        '/admin/sequence/config',
+        { accessToken: token },
+      );
+      setConfig({ chat: res.chat, admin: res.admin });
+      setSequenceConfigLocal(res);
+    } catch {
+      // silent
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  function startEdit() {
+    setDraft([]);
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setDraft([]);
+    setEditing(false);
+  }
+
+  function onPillTap(pos: number) {
+    if (!editing) return;
+    if (draft.length >= 4) return;
+    if (draft.includes(pos)) return;
+    setDraft([...draft, pos]);
+  }
+
+  function resetDraft() {
+    setDraft([]);
+  }
+
+  async function save() {
+    if (draft.length !== 4 || saving) return;
+    setSaving(true);
+    try {
+      const token = await auth.getValidAccessToken();
+      if (!token) return;
+      const res = await apiFetch<{ chat: number[]; admin: number[]; updatedUsers: number }>(
+        '/admin/sequence/config',
+        {
+          method: 'POST',
+          body: { kind: target, sequence: draft },
+          accessToken: token,
+        },
+      );
+      setConfig({ chat: res.chat, admin: res.admin });
+      setSequenceConfigLocal({ chat: res.chat, admin: res.admin });
+      setEditing(false);
+      setDraft([]);
+      Alert.alert(
+        '시퀀스 변경 완료',
+        target === 'chat'
+          ? `채팅 진입 시퀀스 변경됨\n적용 사용자: ${res.updatedUsers}명`
+          : 'Admin 진입 시퀀스 변경됨',
+      );
+    } catch (e) {
+      Alert.alert('실패', e instanceof ApiError ? e.message : '오류');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const currentSeq = config[target];
+  const displaySeq = editing
+    ? [...draft, ...Array(4 - draft.length).fill(null)].slice(0, 4)
+    : currentSeq;
+
   return (
     <View className="flex-1">
       <AdminHeader title="ARM 관리" leftLabel="홈" onBack={onBack} />
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text className="text-muted mb-3" style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>
-          기본 시퀀스
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+        <Text className="text-muted mb-3" style={{ fontSize: 13, lineHeight: 18 }}>
+          ARM 시퀀스는 카테고리 pill 의 position 1~7 중 4개. 사용자 앱은 두 시퀀스를 동시 검증해 매치되는 쪽으로 라우팅.
         </Text>
-        <View className="bg-surface rounded-cardLg overflow-hidden">
-          <SequenceRow label="채팅 진입" sequence={DEFAULT_CHAT_SEQUENCE} />
-          <Sep />
-          <SequenceRow label="Admin 진입" sequence={DEFAULT_ADMIN_SEQUENCE} />
+
+        {/* target segmented */}
+        <View
+          className="flex-row bg-surface rounded-card p-1 mb-4"
+          style={{ borderWidth: 0.5, borderColor: 'rgba(60,60,67,0.12)', opacity: editing ? 0.5 : 1 }}
+          pointerEvents={editing ? 'none' : 'auto'}
+        >
+          {(['chat', 'admin'] as const).map((t) => {
+            const active = target === t;
+            const accent = t === 'chat' ? '#007aff' : '#ff9500';
+            return (
+              <Pressable
+                key={t}
+                onPress={() => setTarget(t)}
+                className="flex-1 py-2 rounded-md items-center"
+                style={{ backgroundColor: active ? accent : 'transparent' }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '700',
+                    color: active ? '#fff' : '#86868b',
+                  }}
+                >
+                  {t === 'chat' ? '채팅 진입' : 'Admin 진입'}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    marginTop: 2,
+                    color: active ? 'rgba(255,255,255,0.85)' : '#86868b',
+                  }}
+                >
+                  {t === 'chat' ? '사용자 → 채팅 모드' : '관리자 → 콘솔'}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-        <Text className="text-muted mt-6" style={{ fontSize: 12, lineHeight: 18 }}>
-          per-user 시퀀스 변경은 사용자 상세 → 시퀀스 변경 (deferred).
-          현재 모든 사용자는 위 기본 시퀀스 공유.
+
+        {/* 현재 / draft 시퀀스 */}
+        <Text className="text-muted mb-2" style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>
+          {editing ? '새 시퀀스 (4개 선택)' : '현재 시퀀스'}
         </Text>
+        <View className="bg-surface rounded-card p-4 mb-3 flex-row gap-2">
+          {displaySeq.map((pos, i) => {
+            const cat = pos != null ? CATEGORIES_ADMIN.find((c) => c.pos === pos) : null;
+            return (
+              <View
+                key={i}
+                className="flex-1 items-center justify-center rounded-md"
+                style={{
+                  paddingVertical: 12,
+                  backgroundColor: cat ? '#1d1d1f' : '#f1f1f3',
+                  borderWidth: cat ? 0 : 1,
+                  borderColor: 'rgba(60,60,67,0.18)',
+                  borderStyle: 'dashed',
+                }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: cat ? '#fff' : '#c5c5c7' }}>
+                  {cat ? `${i + 1}` : '?'}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    marginTop: 2,
+                    color: cat ? 'rgba(255,255,255,0.85)' : '#c5c5c7',
+                  }}
+                >
+                  {cat ? cat.label : '미지정'}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+
+        {editing ? (
+          <>
+            <Text className="text-muted mb-2" style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.4 }}>
+              카테고리 (탭해서 추가)
+            </Text>
+            <View className="flex-row flex-wrap gap-2 mb-3">
+              {CATEGORIES_ADMIN.map((c) => {
+                const taken = draft.includes(c.pos);
+                return (
+                  <Pressable
+                    key={c.pos}
+                    onPress={() => onPillTap(c.pos)}
+                    disabled={taken || draft.length >= 4}
+                    className="rounded-pill"
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      backgroundColor: taken ? '#e5e5ea' : '#1d1d1f',
+                      opacity: taken ? 0.4 : 1,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: taken ? '#86868b' : '#fff',
+                      }}
+                    >
+                      {c.pos}. {c.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View className="flex-row gap-2">
+              <Pressable onPress={resetDraft} className="flex-1 py-3 rounded-card bg-bg items-center">
+                <Text className="text-text" style={{ fontSize: 15 }}>초기화</Text>
+              </Pressable>
+              <Pressable onPress={cancelEdit} className="flex-1 py-3 rounded-card bg-bg items-center">
+                <Text className="text-text" style={{ fontSize: 15 }}>취소</Text>
+              </Pressable>
+              <Pressable
+                onPress={save}
+                disabled={draft.length !== 4 || saving}
+                className="flex-1 py-3 rounded-card items-center"
+                style={{ backgroundColor: draft.length === 4 ? '#007aff' : '#a0c7ff' }}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text className="text-inverse" style={{ fontSize: 15, fontWeight: '700' }}>저장</Text>
+                )}
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <Pressable onPress={startEdit} className="bg-accent rounded-card py-3 items-center">
+            <Text className="text-inverse" style={{ fontSize: 15, fontWeight: '600' }}>
+              {target === 'chat' ? '채팅' : 'Admin'} 시퀀스 변경
+            </Text>
+          </Pressable>
+        )}
+
+        {target === 'chat' ? (
+          <Text className="text-muted mt-4" style={{ fontSize: 12, lineHeight: 18 }}>
+            ⚠ 채팅 시퀀스 변경 시 모든 사용자의 등록된 잠금 코드가 새 값으로 갱신됩니다.
+          </Text>
+        ) : (
+          <Text className="text-muted mt-4" style={{ fontSize: 12, lineHeight: 18 }}>
+            Admin 시퀀스는 클라이언트 캐시. 부팅 시 동기화.
+          </Text>
+        )}
       </ScrollView>
     </View>
   );

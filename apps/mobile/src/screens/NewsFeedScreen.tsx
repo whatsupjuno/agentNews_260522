@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -119,6 +120,11 @@ export function NewsFeedScreen({ navigation }: Props) {
   const armed = seq.state.armed;
   const avatarLetter = auth.user?.nickname?.charAt(0) ?? auth.user?.userId?.charAt(0) ?? '?';
 
+  // 카테고리 필터링 — 헤드라인 (pos 1) 선택 시 전체, 그 외 = 해당 pos
+  const activePos = CATEGORIES[activeFilterIdx]?.pos ?? 1;
+  const filteredArticles =
+    activePos === 1 ? articles : articles.filter((a) => a.feedIndex === activePos);
+
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg">
       <ScrollView
@@ -199,17 +205,19 @@ export function NewsFeedScreen({ navigation }: Props) {
         {/* Section header */}
         <View className="flex-row items-end justify-between px-5 mb-3">
           <Text className="text-text" style={{ fontSize: 18, fontWeight: '700', letterSpacing: -0.3 }}>
-            오늘의 기사
-          </Text>
-          <Text className="text-accent" style={{ fontSize: 14, fontWeight: '500' }}>
-            전체 보기
+            {CATEGORIES[activeFilterIdx]?.label ?? '오늘의 기사'}
           </Text>
         </View>
 
-        {/* 균일 카드 그리드 — hero 제거 */}
-        {articles.map((article) => (
+        {/* 카테고리별 필터링 — pos 1 (헤드라인) = 전체, 그 외 = 해당 pos */}
+        {filteredArticles.map((article) => (
           <StoryCard key={article.id} article={article} onPress={() => handleCardTap(article)} />
         ))}
+        {filteredArticles.length === 0 ? (
+          <Text className="text-muted text-center mt-12" style={{ fontSize: 14 }}>
+            기사가 없습니다
+          </Text>
+        ) : null}
 
         {/* Update timestamp */}
         {updatedAt ? (
@@ -219,20 +227,18 @@ export function NewsFeedScreen({ navigation }: Props) {
         ) : null}
       </ScrollView>
 
-      {/* Bottom tab bar */}
+      {/* Bottom tab bar — 애플 스타일 SVG, 홈/설정 2개 */}
       <View
         className="absolute bottom-0 left-0 right-0 flex-row justify-around bg-surface"
         style={{
-          paddingTop: 12,
-          paddingBottom: 22,
+          paddingTop: 10,
+          paddingBottom: 24,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
         }}
       >
-        <TabIcon label="홈" active />
-        <TabIcon label="둘러보기" />
-        <TabIcon label="검색" />
-        <TabIcon label="설정" onPress={() => navigation.navigate('Settings')} />
+        <TabIcon kind="home" label="홈" active />
+        <TabIcon kind="gear" label="설정" onPress={() => navigation.navigate('Settings')} />
       </View>
     </SafeAreaView>
   );
@@ -279,13 +285,47 @@ function StoryCard({ article, onPress }: { article: FeedArticle; onPress: () => 
   );
 }
 
-function TabIcon({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) {
+function TabIcon({
+  kind,
+  label,
+  active,
+  onPress,
+}: {
+  kind: 'home' | 'gear';
+  label: string;
+  active?: boolean;
+  onPress?: () => void;
+}) {
+  const color = active ? '#007aff' : '#86868b';
+  const fill = active ? '#007aff' : 'none';
   return (
-    <Pressable onPress={onPress} className="items-center">
-      <View
-        className="w-7 h-7 rounded-md mb-1"
-        style={{ backgroundColor: active ? '#007aff' : '#86868b', opacity: active ? 1 : 0.5 }}
-      />
+    <Pressable onPress={onPress} className="items-center" hitSlop={12}>
+      <Svg width={26} height={26} viewBox="0 0 26 26" fill="none">
+        {kind === 'home' ? (
+          <Path
+            d="M4 11.5L13 4l9 7.5V22a1 1 0 01-1 1h-5v-6h-6v6H5a1 1 0 01-1-1V11.5z"
+            stroke={color}
+            strokeWidth={1.8}
+            strokeLinejoin="round"
+            fill={fill}
+          />
+        ) : (
+          <>
+            <Path
+              d="M13 9.8a3.2 3.2 0 100 6.4 3.2 3.2 0 000-6.4z"
+              stroke={color}
+              strokeWidth={1.8}
+              fill={fill}
+            />
+            <Path
+              d="M13 2v3M13 21v3M2 13h3M21 13h3M5.3 5.3l2.1 2.1M18.6 18.6l2.1 2.1M5.3 20.7l2.1-2.1M18.6 7.4l2.1-2.1"
+              stroke={color}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+            />
+          </>
+        )}
+      </Svg>
       <Text
         style={{
           fontSize: 10,

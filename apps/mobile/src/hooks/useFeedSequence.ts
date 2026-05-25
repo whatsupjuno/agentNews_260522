@@ -2,12 +2,11 @@ import { useCallback, useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../store/auth';
 import { useUnlock } from '../store/unlock';
+import { getSequenceConfig } from '../services/sequenceConfig';
 
-const CHAT_SEQUENCE = [5, 3, 1, 7] as const;
-const ADMIN_SEQUENCE = [7, 1, 3, 5] as const;
 const ARM_TIMEOUT_MS = 8000;
 const TAP_RATE_LIMIT_MS = 1000;
-const WINDOW = 4; // sliding window 길이
+const WINDOW = 4;
 
 interface VerifyResponse {
   unlockToken: string;
@@ -23,7 +22,6 @@ export type SequenceCompletion = null | { kind: 'chat' } | { kind: 'admin' };
 interface FeedSequenceApi {
   state: FeedSequenceState;
   onTapWordmark(): void;
-  /** position 1~7. 성공 시 'chat' 또는 'admin'. progress 중이면 null. */
   onTapArticle(position: number): Promise<SequenceCompletion>;
 }
 
@@ -33,16 +31,6 @@ function arraysEqual(a: readonly number[], b: readonly number[]): boolean {
   return true;
 }
 
-/**
- * 위장 진입 트래커 (v2 — dual sequence).
- *
- * 마지막 4탭 sliding window 에 따라:
- *   - [5,3,1,7] → chat (sequence/verify 호출 → unlock_token)
- *   - [7,1,3,5] → admin (mobile 측 admin 화면 navigate)
- *
- * 외부 신호 0 — toast / 색상 변화 / 진동 모두 금지.
- * 유일한 신호: navigation.
- */
 export function useFeedSequence(): FeedSequenceApi {
   const [state, setState] = useState<FeedSequenceState>({ armed: false });
   const armTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,7 +59,6 @@ export function useFeedSequence(): FeedSequenceApi {
       if (armTimerRef.current) clearTimeout(armTimerRef.current);
       bufferRef.current = [];
       armTimerRef.current = setTimeout(() => {
-        // silent auto-disarm
         setState({ armed: false });
         bufferRef.current = [];
         armTimerRef.current = null;
@@ -82,7 +69,6 @@ export function useFeedSequence(): FeedSequenceApi {
 
   const onTapArticle = useCallback(
     async (position: number): Promise<SequenceCompletion> => {
-      // rate limit
       const now = Date.now();
       const lastAt = lastTapTimesRef.current.get(position);
       if (lastAt && now - lastAt < TAP_RATE_LIMIT_MS) return null;
@@ -90,7 +76,6 @@ export function useFeedSequence(): FeedSequenceApi {
 
       if (!state.armed) return null;
 
-      // sliding window — 마지막 4 탭만 유지
       bufferRef.current.push(position);
       if (bufferRef.current.length > WINDOW) {
         bufferRef.current = bufferRef.current.slice(-WINDOW);
@@ -99,28 +84,26 @@ export function useFeedSequence(): FeedSequenceApi {
       if (bufferRef.current.length < WINDOW) return null;
 
       const buf = bufferRef.current;
+      const { chat, admin } = getSequenceConfig();
 
-      // admin sequence 우선 체크
-      if (arraysEqual(buf, ADMIN_SEQUENCE)) {
+      if (arraysEqual(buf, admin)) {
         disarm();
         return { kind: 'admin' };
       }
 
-      // chat sequence
-      if (arraysEqual(buf, CHAT_SEQUENCE)) {
+      if (arraysEqual(buf, chat)) {
         disarm();
         const accessToken = await auth.getValidAccessToken();
         if (!accessToken) return null;
         try {
           const res = await apiFetch<VerifyResponse>('/sequence/verify', {
             method: 'POST',
-            body: { sequence: [...CHAT_SEQUENCE] },
+            body: { sequence: chat },
             accessToken,
           });
           await unlock.setUnlock(res.unlockToken, res.expiresAt);
           return { kind: 'chat' };
         } catch {
-          // silent
           return null;
         }
       }

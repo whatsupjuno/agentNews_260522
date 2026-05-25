@@ -10,14 +10,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminService } from '../../application/use-cases/admin.service';
+import { SequenceConfigService } from '../../application/use-cases/sequence-config.service';
 import { UpdateUserSequenceDto } from '../dto/admin.dto';
+import { SetSequenceConfigDto } from '../dto/sequence-config.dto';
 import { AdminGuard } from '../guards/admin.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminController {
-  constructor(private readonly admin: AdminService) {}
+  constructor(
+    private readonly admin: AdminService,
+    private readonly seqConfig: SequenceConfigService,
+  ) {}
 
   @Get('users')
   async listUsers(@Query('q') q?: string) {
@@ -58,7 +63,18 @@ export class AdminController {
     await this.admin.deleteChat(pairingId);
   }
 
-  /** 현재 로그인한 agent 가 admin 인지 확인 (mobile 측 시퀀스 분기 용). */
+  /** 글로벌 ARM 시퀀스 조회 / 변경 (chat / admin) */
+  @Get('sequence/config')
+  getSequenceConfig() {
+    return this.seqConfig.getConfig();
+  }
+
+  @Post('sequence/config')
+  async setSequenceConfig(@Body() dto: SetSequenceConfigDto) {
+    const r = await this.seqConfig.setSequence(dto.kind, dto.sequence);
+    return { ...this.seqConfig.getConfig(), updatedUsers: r.updatedUsers };
+  }
+
   @Get('me/whoami')
   whoami() {
     return { isAdmin: true };

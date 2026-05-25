@@ -71,14 +71,14 @@ export class NewsService implements OnModuleInit {
 
   private async refresh(): Promise<void> {
     try {
-      const articles = await this.rss.fetchAll();
+      const articles = await this.rss.fetchAll(5);
       if (articles.length === 0) {
         this.logger.warn('Yonhap fetch returned 0 articles — keeping cache');
         return;
       }
       const now = Date.now();
-      const mapped: FeedArticle[] = articles.map((a) => ({
-        id: `art-${a.position}`,
+      const mapped: FeedArticle[] = articles.map((a, idx) => ({
+        id: `art-${a.position}-${idx}`,
         feedIndex: a.position,
         kind: 'standard',
         eyebrow: a.categoryKr,
@@ -92,16 +92,17 @@ export class NewsService implements OnModuleInit {
         imageUrl: a.image ?? undefined,
         url: a.url,
       }));
-      // 7개 카테고리 보장 — 누락 카테고리는 mock fallback 항목 사용
-      const finalArticles: FeedArticle[] = [];
+      // 카테고리 누락 시 fallback 채움
+      const finalArticles: FeedArticle[] = [...mapped];
       for (let pos = 1; pos <= 7; pos++) {
-        const real = mapped.find((m) => m.feedIndex === pos);
-        const fb = MOCK_FALLBACK.find((m) => m.feedIndex === pos);
-        finalArticles.push(real ?? fb!);
+        if (!mapped.some((m) => m.feedIndex === pos)) {
+          const fb = MOCK_FALLBACK.find((m) => m.feedIndex === pos);
+          if (fb) finalArticles.push(fb);
+        }
       }
       this.cache = finalArticles;
       this.cacheAt = now;
-      this.logger.log(`news cache refreshed (${mapped.length}/${SLOTS_TOTAL} live)`);
+      this.logger.log(`news cache refreshed (${mapped.length} articles across 7 categories)`);
     } catch (e) {
       this.logger.error(`news refresh failed: ${(e as Error).message}`);
     }
@@ -118,5 +119,3 @@ export class NewsService implements OnModuleInit {
     return `${diffD}일 전`;
   }
 }
-
-const SLOTS_TOTAL = 7;

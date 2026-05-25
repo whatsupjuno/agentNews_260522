@@ -5,6 +5,7 @@ import {
   registerPushTokenWithBackend,
   resetPushRegistrationCache,
 } from '../services/pushRegistration';
+import { loadSequenceConfig } from '../services/sequenceConfig';
 
 export interface AuthUser {
   externalId: string;
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isAdmin: false,
         });
         void registerPushTokenWithBackend(accessToken);
+        void loadSequenceConfig(accessToken);
         void checkIsAdmin(accessToken).then((ok) => setState((s) => ({ ...s, isAdmin: ok })));
       } else {
         setState((s) => ({ ...s, status: 'unauthenticated' }));

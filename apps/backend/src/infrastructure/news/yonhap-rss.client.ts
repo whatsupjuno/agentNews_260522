@@ -94,12 +94,13 @@ export class YonhapRssClient {
     textNodeName: '#text',
   });
 
-  async fetchAll(): Promise<YonhapArticle[]> {
+  /** 각 카테고리당 최대 N개 (default 5) fetch */
+  async fetchAll(perCategory = 5): Promise<YonhapArticle[]> {
     const results: YonhapArticle[] = [];
     for (const slot of SLOTS) {
       try {
-        const article = await this.fetchOne(slot);
-        if (article) results.push(article);
+        const articles = await this.fetchMany(slot, perCategory);
+        results.push(...articles);
       } catch (e) {
         this.logger.warn(`RSS fetch fail (${slot.categoryKr}): ${(e as Error).message}`);
       }
@@ -107,7 +108,10 @@ export class YonhapRssClient {
     return results;
   }
 
-  private async fetchOne(slot: (typeof SLOTS)[number]): Promise<YonhapArticle | null> {
+  private async fetchMany(
+    slot: (typeof SLOTS)[number],
+    take: number,
+  ): Promise<YonhapArticle[]> {
     const res = await fetch(slot.rssUrl, {
       method: 'GET',
       headers: { 'User-Agent': 'Mozilla/5.0 (agentNews bot)' },
@@ -116,9 +120,8 @@ export class YonhapRssClient {
     const xml = await res.text();
     const parsed = this.parser.parse(xml) as RssRoot;
     const items = parsed.rss?.channel?.item;
-    const firstRaw = Array.isArray(items) ? items[0] : items;
-    if (!firstRaw) return null;
-    return this.toArticle(slot, firstRaw);
+    const list = Array.isArray(items) ? items : items ? [items] : [];
+    return list.slice(0, take).map((raw) => this.toArticle(slot, raw));
   }
 
   private toArticle(slot: (typeof SLOTS)[number], item: RssItem): YonhapArticle {
