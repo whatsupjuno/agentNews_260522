@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -34,14 +35,17 @@ interface FeedArticle {
   source: string;
   publishedAgo: string;
   tone: { bg: string; fg: string; label: string };
+  imageUrl?: string;
+  url?: string;
 }
 
+// 연합뉴스TV RSS 카테고리 1:1 매핑
 const CATEGORIES = [
   { pos: 1, label: '헤드라인' },
   { pos: 2, label: '정치' },
   { pos: 3, label: '경제' },
-  { pos: 4, label: '기술' },
-  { pos: 5, label: '문화' },
+  { pos: 4, label: '세계' },
+  { pos: 5, label: '문화·연예' },
   { pos: 6, label: '스포츠' },
   { pos: 7, label: '사회' },
 ];
@@ -249,14 +253,22 @@ function StoryCard({ article, onPress }: { article: FeedArticle; onPress: () => 
           {article.source} · {article.publishedAgo}
         </Text>
       </View>
-      <View
-        style={{
-          width: 96,
-          height: 96,
-          borderRadius: 10,
-          backgroundColor: article.tone.bg,
-        }}
-      />
+      {article.imageUrl ? (
+        <Image
+          source={{ uri: article.imageUrl }}
+          style={{ width: 96, height: 96, borderRadius: 10, backgroundColor: article.tone.bg }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={{
+            width: 96,
+            height: 96,
+            borderRadius: 10,
+            backgroundColor: article.tone.bg,
+          }}
+        />
+      )}
     </Pressable>
   );
 }

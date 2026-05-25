@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   FlatList,
+  Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -34,6 +36,8 @@ interface Article {
   body?: string;
   tone: { bg: string; fg: string };
   eyebrow: string;
+  imageUrl?: string;
+  url?: string;
 }
 
 export function ArticleDetailScreen({ route, navigation }: Props) {
@@ -135,12 +139,20 @@ function ArticleBody({ article }: { article: Article | null }) {
   }
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
-      <View
-        style={{
-          height: 260,
-          backgroundColor: article.tone?.bg ?? '#e5e5ea',
-        }}
-      />
+      {article.imageUrl ? (
+        <Image
+          source={{ uri: article.imageUrl }}
+          style={{ height: 260, width: '100%', backgroundColor: article.tone?.bg ?? '#e5e5ea' }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={{
+            height: 260,
+            backgroundColor: article.tone?.bg ?? '#e5e5ea',
+          }}
+        />
+      )}
       <View className="px-6 pt-6">
         <Text className="text-accent" style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1.6 }}>
           {article.eyebrow.toUpperCase()}
@@ -160,14 +172,17 @@ function ArticleBody({ article }: { article: Article | null }) {
         >
           {article.body ?? '본문이 준비되지 않았습니다.'}
         </Text>
-        <Pressable
-          className="bg-bg rounded-card py-3 mt-6 items-center"
-          style={{ borderWidth: 1, borderColor: 'rgba(60,60,67,0.12)' }}
-        >
-          <Text className="text-text" style={{ fontSize: 15, fontWeight: '500' }}>
-            원문 보기
-          </Text>
-        </Pressable>
+        {article.url ? (
+          <Pressable
+            onPress={() => Linking.openURL(article.url!)}
+            className="bg-bg rounded-card py-3 mt-6 items-center"
+            style={{ borderWidth: 1, borderColor: 'rgba(60,60,67,0.12)' }}
+          >
+            <Text className="text-text" style={{ fontSize: 15, fontWeight: '500' }}>
+              원문 보기
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
     </ScrollView>
   );

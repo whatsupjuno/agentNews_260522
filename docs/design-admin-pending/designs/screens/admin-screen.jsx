@@ -26,7 +26,8 @@ const CATEGORIES_ADMIN = [
   { pos: 7, label: '사회' },
 ];
 
-const DEFAULT_ARM_SEQUENCE = [5, 3, 1, 7];
+const DEFAULT_ARM_SEQUENCE   = [5, 3, 1, 7];  // → 채팅 unlock
+const DEFAULT_ADMIN_SEQUENCE = [7, 1, 3, 5];  // → Admin 콘솔 진입
 
 const ADMIN_CHATS = [
   { id: 'rm_001', users: ['jun_2026', 'jiwon_k'], msgs: 142, attachments: 18, size: '32.4 MB', lastActivity: '5분 전', created: '2026-03-14' },
@@ -310,15 +311,13 @@ function Sep() {
 // ═══════════════════════════════════════════════════════════════════════════
 function UsersView({ goto, openUser }) {
   const [q, setQ] = aUseState('');
-  const [filter, setFilter] = aUseState('all'); // all | active | pending | blocked
 
   const filtered = aUseMemo(() => {
     return ADMIN_USERS.filter(u => {
-      if (filter !== 'all' && u.status !== filter) return false;
       if (q.trim() && !(u.id.includes(q) || u.name.includes(q) || u.email.includes(q))) return false;
       return true;
     });
-  }, [q, filter]);
+  }, [q]);
 
   return (
     <div>
@@ -345,28 +344,7 @@ function UsersView({ goto, openUser }) {
             }}/>
         </div>
 
-        {/* segmented filter */}
-        <div style={{
-          display: 'flex', gap: 6, marginTop: 12,
-          background: ADMIN.surface, padding: 4, borderRadius: 9,
-          border: '0.5px solid ' + ADMIN.border,
-        }}>
-          {[
-            { key: 'all',     label: `전체 · ${ADMIN_USERS.length}` },
-            { key: 'active',  label: '활성' },
-            { key: 'pending', label: '미인증' },
-            { key: 'blocked', label: '차단' },
-          ].map(t => (
-            <button key={t.key} onClick={() => setFilter(t.key)} style={{
-              flex: 1, padding: '6px 4px',
-              background: filter === t.key ? ADMIN.accent : 'transparent',
-              color: filter === t.key ? '#fff' : ADMIN.textDim,
-              fontWeight: 600, fontSize: 12, letterSpacing: -0.1,
-              border: 'none', borderRadius: 6, cursor: 'pointer',
-              fontFamily: ADMIN_FONT, transition: 'all 120ms',
-            }}>{t.label}</button>
-          ))}
-        </div>
+        {/* segmented filter 제거 — 사용자 목록만 그대로 노출 */}
 
         {/* list */}
         <div style={{
@@ -402,13 +380,8 @@ function UserRow({ user, onTap }) {
     }}>
       <Avatar name={user.name}/>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <span style={{ fontSize: 15, fontWeight: 600, color: ADMIN.text, letterSpacing: -0.2 }}>
-            {user.name}
-          </span>
-          <StatusBadge status={user.status}/>
+        <div style={{ fontSize: 15, fontWeight: 600, color: ADMIN.text, letterSpacing: -0.2 }}>
+          {user.name}
         </div>
         <div style={{
           fontSize: 12, color: ADMIN.textDim,
@@ -433,12 +406,7 @@ function UserDetailView({ userId, goto }) {
 
   return (
     <div>
-      <AdminHeader title="사용자 상세" leftLabel="목록" onBack={() => goto('users')}
-        right={<button style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: ADMIN.accent, fontFamily: ADMIN_FONT, fontSize: 17,
-          padding: '6px 8px',
-        }}>{AdminIcon.edit()}</button>}/>
+      <AdminHeader title="사용자 상세" leftLabel="목록" onBack={() => goto('users')}/>
       <div style={{ padding: '16px 16px 100px' }}>
         {/* header card */}
         <div style={{
@@ -456,9 +424,6 @@ function UserDetailView({ userId, goto }) {
             fontFamily: ADMIN_FONT_MONO, fontSize: 13,
             color: ADMIN.textDim, marginTop: 4,
           }}>@{user.id}</div>
-          <div style={{ marginTop: 10 }}>
-            <StatusBadge status={user.status}/>
-          </div>
         </div>
 
         {/* facts */}
@@ -473,79 +438,33 @@ function UserDetailView({ userId, goto }) {
           <Field label="마지막 접속" value={user.lastSeen}/>
         </Card>
 
-        <SectionLabel>페어 연결</SectionLabel>
+        <SectionLabel>페어</SectionLabel>
         <Card>
           {peer ? (
             <div style={{
               padding: '14px 14px', display: 'flex', alignItems: 'center', gap: 12,
             }}>
               <Avatar name={peer.name} size={36}/>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: ADMIN.text }}>{peer.name}</div>
                 <div style={{
                   fontSize: 12, color: ADMIN.textDim,
                   fontFamily: ADMIN_FONT_MONO, marginTop: 2,
                 }}>@{peer.id}</div>
               </div>
-              <button style={{
-                background: 'rgba(255,69,58,0.12)', border: 'none',
-                color: ADMIN.danger, fontWeight: 600, fontSize: 12,
-                padding: '6px 12px', borderRadius: 999,
-                cursor: 'pointer', fontFamily: ADMIN_FONT,
-              }}>연결 해제</button>
             </div>
           ) : (
             <div style={{ padding: 14, color: ADMIN.textDim, fontSize: 14 }}>
-              페어 연결 없음. 
-              <button style={{
-                background: 'none', border: 'none', color: ADMIN.accent,
-                fontWeight: 600, marginLeft: 4, cursor: 'pointer', fontSize: 14,
-              }}>+ 페어 지정</button>
+              페어 없음
             </div>
           )}
         </Card>
 
-        <SectionLabel>잠금 코드</SectionLabel>
-        <Card padding="14px">
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: 10,
-          }}>
-            <div style={{ fontSize: 13, color: ADMIN.textDim }}>현재 시퀀스</div>
-            <button style={{
-              background: ADMIN.accentSoft, border: 'none',
-              color: ADMIN.accent, fontWeight: 600, fontSize: 12,
-              padding: '4px 10px', borderRadius: 999,
-              cursor: 'pointer', fontFamily: ADMIN_FONT,
-            }}>편집</button>
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {DEFAULT_ARM_SEQUENCE.map((pos, i) => (
-              <div key={i} style={{
-                flex: 1,
-                background: ADMIN.surfaceAlt,
-                padding: '10px 6px', borderRadius: 8,
-                textAlign: 'center',
-                border: '0.5px solid ' + ADMIN.border,
-              }}>
-                <div style={{
-                  fontFamily: ADMIN_FONT_DISPLAY,
-                  fontSize: 18, fontWeight: 700, color: ADMIN.accent,
-                  letterSpacing: -0.4,
-                }}>{pos}</div>
-                <div style={{ fontSize: 10, color: ADMIN.textMuted, marginTop: 2 }}>
-                  {CATEGORIES_ADMIN.find(c => c.pos === pos)?.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <SectionLabel danger>위험 작업</SectionLabel>
+        <SectionLabel>활동</SectionLabel>
         <Card>
-          <ActionRow danger label={user.status === 'blocked' ? '차단 해제' : '계정 차단'}/>
+          <Field label="누적 메시지" value={`${user.chats} 건`}/>
           <Sep/>
-          <ActionRow danger label="계정 + 전체 데이터 삭제"/>
+          <Field label="상태" value={user.status === 'active' ? '활성' : user.status === 'pending' ? '미인증' : '차단됨'}/>
         </Card>
       </div>
     </div>
@@ -604,14 +523,23 @@ function ActionRow({ label, danger }) {
 // ARM (잠금 코드) MANAGEMENT
 // ═══════════════════════════════════════════════════════════════════════════
 function ArmView({ goto }) {
-  const [sequence, setSequence] = aUseState(DEFAULT_ARM_SEQUENCE);
+  // 두 시퀀스: 채팅 unlock + Admin 진입.
+  const [sequences, setSequences] = aUseState({
+    chat:  DEFAULT_ARM_SEQUENCE,
+    admin: DEFAULT_ADMIN_SEQUENCE,
+  });
+  const [target, setTarget] = aUseState('chat'); // 'chat' | 'admin'
   const [editing, setEditing] = aUseState(false);
   const [draft, setDraft] = aUseState([]);
 
-  const startEdit = () => {
-    setDraft([]);
-    setEditing(true);
+  const TARGET_META = {
+    chat:  { label: '채팅 unlock', sub: '일반 사용자 → 채팅 모드',  accent: ADMIN.accent, accentSoft: ADMIN.accentSoft },
+    admin: { label: 'Admin 진입',  sub: '관리자 → 이 콘솔',         accent: '#ff9500',    accentSoft: 'rgba(255,149,0,0.16)' },
   };
+  const meta = TARGET_META[target];
+  const sequence = sequences[target];
+
+  const startEdit = () => { setDraft([]); setEditing(true); };
   const onPillTap = (pos) => {
     if (!editing) return;
     if (draft.length >= 4) return;
@@ -620,8 +548,12 @@ function ArmView({ goto }) {
   };
   const reset = () => setDraft([]);
   const save = () => {
-    setSequence(draft);
+    setSequences({ ...sequences, [target]: draft });
     setEditing(false);
+  };
+  const switchTarget = (t) => {
+    if (editing) return; // editing 중에는 전환 금지
+    setTarget(t);
   };
 
   return (
@@ -629,16 +561,48 @@ function ArmView({ goto }) {
       <AdminHeader title="ARM 관리" leftLabel="홈" onBack={() => goto('home')}/>
       <div style={{ padding: '16px 16px 100px' }}>
         <div style={{ fontSize: 13, color: ADMIN.textDim, marginBottom: 18, lineHeight: 1.5 }}>
-          잠금 코드 시퀀스는 카테고리 pill 의 <b style={{ color: ADMIN.text }}>position 1~7</b> 중 4개를 순서대로 선택. 사용자 앱의 카테고리 strip 이 이 코드를 받습니다.
+          ARM 시퀀스는 카테고리 pill 의 <b style={{ color: ADMIN.text }}>position 1~7</b> 중 4개. 사용자 앱은 두 시퀀스를 동시 검증해 매치되는 쪽으로 라우팅합니다.
         </div>
 
-        <SectionLabel>기본 시퀀스 (전체 사용자 적용)</SectionLabel>
+        {/* 타겟 segmented control */}
+        <div style={{
+          display: 'flex', gap: 6, marginBottom: 14,
+          background: ADMIN.surface, padding: 4, borderRadius: 10,
+          border: '0.5px solid ' + ADMIN.border,
+          opacity: editing ? 0.5 : 1,
+          pointerEvents: editing ? 'none' : 'auto',
+        }}>
+          {['chat', 'admin'].map((t) => {
+            const m = TARGET_META[t];
+            const active = target === t;
+            return (
+              <button key={t} onClick={() => switchTarget(t)} style={{
+                flex: 1, padding: '10px 8px',
+                background: active ? m.accent : 'transparent',
+                color: active ? '#fff' : ADMIN.textDim,
+                fontWeight: 600, fontSize: 13, letterSpacing: -0.1,
+                border: 'none', borderRadius: 7, cursor: 'pointer',
+                fontFamily: ADMIN_FONT, transition: 'all 150ms',
+                textAlign: 'left',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{m.label}</div>
+                <div style={{
+                  fontSize: 10, marginTop: 2, fontWeight: 500,
+                  color: active ? 'rgba(255,255,255,0.85)' : ADMIN.textMuted,
+                  letterSpacing: -0.05,
+                }}>{m.sub}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        <SectionLabel>{meta.label} 시퀀스</SectionLabel>
         <Card padding="14px">
           <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-            {(editing ? draft.length === 4 ? draft : [...draft, ...Array(4 - draft.length).fill(null)] : sequence).map((pos, i) => (
+            {(editing ? (draft.length === 4 ? draft : [...draft, ...Array(4 - draft.length).fill(null)]) : sequence).map((pos, i) => (
               <div key={i} style={{
                 flex: 1,
-                background: pos ? ADMIN.accent : ADMIN.surfaceAlt,
+                background: pos ? meta.accent : ADMIN.surfaceAlt,
                 padding: '12px 6px', borderRadius: 10,
                 textAlign: 'center',
                 border: '0.5px solid ' + (pos ? 'transparent' : ADMIN.border),
@@ -663,7 +627,7 @@ function ArmView({ goto }) {
           {editing ? (
             <>
               <div style={{ fontSize: 12, color: ADMIN.textMuted, marginBottom: 8, textAlign: 'center' }}>
-                아래 카테고리에서 4개를 순서대로 선택 ({draft.length}/4)
+                <b style={{ color: meta.accent }}>{meta.label}</b> 시퀀스 — 4개를 순서대로 선택 ({draft.length}/4)
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                 {CATEGORIES_ADMIN.map(c => {
@@ -673,8 +637,8 @@ function ArmView({ goto }) {
                     <button key={c.pos} onClick={() => onPillTap(c.pos)}
                       disabled={used}
                       style={{
-                        background: used ? ADMIN.accentSoft : ADMIN.surfaceAlt,
-                        color: used ? ADMIN.accent : ADMIN.text,
+                        background: used ? meta.accentSoft : ADMIN.surfaceAlt,
+                        color: used ? meta.accent : ADMIN.text,
                         border: '0.5px solid ' + (used ? 'transparent' : ADMIN.border),
                         borderRadius: 8, padding: '8px 4px',
                         fontFamily: ADMIN_FONT, fontSize: 12, fontWeight: 600,
@@ -691,7 +655,7 @@ function ArmView({ goto }) {
                         <div style={{
                           position: 'absolute', top: 4, right: 4,
                           width: 14, height: 14, borderRadius: 999,
-                          background: ADMIN.accent, color: '#fff',
+                          background: meta.accent, color: '#fff',
                           fontSize: 9, fontWeight: 700,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>{order}</div>
@@ -710,7 +674,7 @@ function ArmView({ goto }) {
                 }}>다시 시작</button>
                 <button onClick={save} disabled={draft.length !== 4} style={{
                   flex: 1, padding: '10px',
-                  background: draft.length === 4 ? ADMIN.accent : ADMIN.surfaceAlt,
+                  background: draft.length === 4 ? meta.accent : ADMIN.surfaceAlt,
                   color: draft.length === 4 ? '#fff' : ADMIN.textMuted,
                   border: 'none', borderRadius: 9,
                   fontFamily: ADMIN_FONT, fontSize: 14, fontWeight: 600,
@@ -721,51 +685,67 @@ function ArmView({ goto }) {
           ) : (
             <button onClick={startEdit} style={{
               width: '100%', padding: 10,
-              background: ADMIN.surfaceAlt, color: ADMIN.text,
+              background: meta.accentSoft, color: meta.accent,
               border: '0.5px solid ' + ADMIN.border, borderRadius: 9,
               fontFamily: ADMIN_FONT, fontSize: 14, fontWeight: 600,
               cursor: 'pointer',
-            }}>시퀀스 편집</button>
+            }}>{meta.label} 시퀀스 편집</button>
           )}
         </Card>
 
         <SectionLabel>카테고리 위치 매핑</SectionLabel>
         <Card>
-          {CATEGORIES_ADMIN.map((c, i) => (
-            <div key={c.pos}>
-              <div style={{
-                padding: '10px 14px',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{
-                    width: 24, height: 24, borderRadius: 6,
-                    background: ADMIN.surfaceAlt, color: ADMIN.accent,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 700, fontFamily: ADMIN_FONT_MONO,
-                    border: '0.5px solid ' + ADMIN.border,
-                  }}>{c.pos}</div>
-                  <div style={{ fontSize: 14, color: ADMIN.text }}>{c.label}</div>
+          {CATEGORIES_ADMIN.map((c, i) => {
+            const chatStep  = sequences.chat.indexOf(c.pos);
+            const adminStep = sequences.admin.indexOf(c.pos);
+            return (
+              <div key={c.pos}>
+                <div style={{
+                  padding: '10px 14px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: 8,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      width: 24, height: 24, borderRadius: 6,
+                      background: ADMIN.surfaceAlt, color: ADMIN.text,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 700, fontFamily: ADMIN_FONT_MONO,
+                      border: '0.5px solid ' + ADMIN.border, flexShrink: 0,
+                    }}>{c.pos}</div>
+                    <div style={{ fontSize: 14, color: ADMIN.text }}>{c.label}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                    {chatStep >= 0 && (
+                      <div style={{
+                        fontSize: 10, color: TARGET_META.chat.accent, fontWeight: 700,
+                        background: TARGET_META.chat.accentSoft,
+                        padding: '2px 8px', borderRadius: 999, fontFamily: ADMIN_FONT_MONO,
+                        letterSpacing: 0.2,
+                      }}>chat·{chatStep + 1}</div>
+                    )}
+                    {adminStep >= 0 && (
+                      <div style={{
+                        fontSize: 10, color: TARGET_META.admin.accent, fontWeight: 700,
+                        background: TARGET_META.admin.accentSoft,
+                        padding: '2px 8px', borderRadius: 999, fontFamily: ADMIN_FONT_MONO,
+                        letterSpacing: 0.2,
+                      }}>admin·{adminStep + 1}</div>
+                    )}
+                  </div>
                 </div>
-                {sequence.includes(c.pos) && (
-                  <div style={{
-                    fontSize: 11, color: ADMIN.accent, fontWeight: 600,
-                    background: ADMIN.accentSoft, padding: '2px 8px',
-                    borderRadius: 999, fontFamily: ADMIN_FONT_MONO,
-                  }}>step {sequence.indexOf(c.pos) + 1}</div>
-                )}
+                {i < CATEGORIES_ADMIN.length - 1 && <Sep/>}
               </div>
-              {i < CATEGORIES_ADMIN.length - 1 && <Sep/>}
-            </div>
-          ))}
+            );
+          })}
         </Card>
 
         <div style={{
           marginTop: 22, fontSize: 12, color: ADMIN.textMuted, lineHeight: 1.5,
           padding: '12px 14px', background: ADMIN.surfaceAlt, borderRadius: 10,
         }}>
-          <b style={{ color: ADMIN.textDim }}>주의.</b> 시퀀스 변경 시 모든 사용자의 기존 unlock_token 이 즉시 무효화됩니다.
-          사용자에게 새 코드를 별도 채널로 알려야 합니다.
+          <b style={{ color: ADMIN.textDim }}>주의.</b> 시퀀스 변경 시 해당 타겟의 기존 토큰이 즉시 무효화됩니다.
+          <br/>두 시퀀스가 겹치지 않도록 주의 (겹치면 라우팅 충돌).
         </div>
       </div>
     </div>
@@ -963,9 +943,9 @@ function AdminTabBar({ tab, setTab }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
-function AdminScreen() {
-  const [tab, setTab] = aUseState('home');
-  const [selectedUserId, setSelectedUserId] = aUseState(null);
+function AdminScreen({ initialTab = 'home', initialUserId = null } = {}) {
+  const [tab, setTab] = aUseState(initialTab);
+  const [selectedUserId, setSelectedUserId] = aUseState(initialUserId);
 
   const goto = (next) => {
     setTab(next);

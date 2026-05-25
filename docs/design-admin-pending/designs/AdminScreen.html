@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>DailyNews — Admin (mobile)</title>
+<title>DailyNews — Admin (전체 화면)</title>
 <style>
   html, body {
     margin: 0; padding: 0; min-height: 100vh;
@@ -15,63 +15,195 @@
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
-  .stage {
-    display: flex; align-items: flex-start; justify-content: center;
-    gap: 28px; padding: 40px 24px; flex-wrap: wrap;
+  .wrap { max-width: 1700px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  header.hero {
+    margin-bottom: 40px; padding-bottom: 24px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
   }
-  .caption {
-    max-width: 280px; color: #9aa0a8;
-    font-size: 13px; line-height: 1.55; padding-top: 8px;
+  .codename {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: #ff6b3b; text-transform: uppercase;
+    margin-bottom: 10px;
   }
-  .caption .eyebrow {
-    font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px;
-    text-transform: uppercase; color: #ff6b3b; margin-bottom: 8px;
+  header.hero h1 {
+    margin: 0;
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 44px; font-weight: 800; letter-spacing: -1.2px;
   }
-  .caption h1 {
-    margin: 0 0 8px; font-size: 22px; font-weight: 700;
-    letter-spacing: -0.4px; color: #f5f5f7;
+  header.hero .sub {
+    font-size: 15px; color: #9aa0a8;
+    margin-top: 12px; max-width: 720px; line-height: 1.55;
   }
-  .caption p { margin: 0 0 10px; }
-  .caption b { color: #f5f5f7; }
-  .hint {
-    margin-top: 14px;
-    padding: 10px 12px;
-    background: rgba(255,107,59,0.08);
-    border: 0.5px solid rgba(255,107,59,0.25);
-    border-radius: 10px;
-    font-size: 11.5px; line-height: 1.5; color: #ffc7a8;
+  .pill-row { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .pill {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.1);
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+    color: #f5f5f7;
   }
-  .hint b { color: #ffe5d4; }
-  .hint code {
-    background: rgba(0,0,0,0.3); padding: 1px 6px; border-radius: 4px;
+  .pill b { color: #ff6b3b; }
+  .pill code {
+    background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;
     font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    margin-left: 4px;
   }
+
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    color: #6c707a; text-transform: uppercase;
+    margin: 48px 0 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 1500px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 900px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .col-num {
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 32px; font-weight: 800; letter-spacing: -1px;
+    color: #ff6b3b; line-height: 1;
+  }
+  .col-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.4px;
+    color: #9aa0a8; text-transform: uppercase;
+    text-align: center;
+  }
+  .col-sub {
+    font-size: 12px; color: #9aa0a8;
+    max-width: 280px; text-align: center; line-height: 1.55;
+  }
+  .col-sub b { color: #f5f5f7; font-weight: 600; }
+  .col-sub code {
+    background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    color: #ffc7a8;
+  }
+
+  .feature-box {
+    margin-top: 56px;
+    background: rgba(255,107,59,0.06);
+    border: 0.5px solid rgba(255,107,59,0.2);
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 760px) { .feature-box { grid-template-columns: 1fr; } }
+  .feature-box h3 {
+    font-family: -apple-system, "SF Pro Display", sans-serif;
+    font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
+    margin: 0 0 8px; color: #ffe5d4;
+  }
+  .feature-box p { font-size: 13.5px; color: #ffc7a8; line-height: 1.55; margin: 0; }
+  .feature-box code {
+    background: rgba(0,0,0,0.3); padding: 1px 6px; border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px;
+    color: #ffe5d4;
+  }
+
   ::-webkit-scrollbar { display: none; }
   @keyframes dn-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
-<div class="stage">
-  <aside class="caption">
-    <div class="eyebrow">Admin · Mobile</div>
-    <h1>관리자 콘솔</h1>
-    <p>DailyNews MVP 운영용. <b>사용자 / ARM / 채팅 데이터</b> 직접 관리.</p>
-    <p style="margin-top:8px">디자인 — 다크 테마 · 오렌지 액센트로 사용자 앱과 시각적 구분. iOS 14 모바일 폼팩터.</p>
-    <ul style="padding-left:18px;margin:6px 0">
-      <li><b>Home</b> · 통계 + 3 메뉴</li>
-      <li><b>사용자</b> · 검색 / 필터 / 상세</li>
-      <li><b>ARM</b> · 시퀀스 편집 (인터랙티브)</li>
-      <li><b>채팅</b> · 채팅방 리스트 + 삭제</li>
-    </ul>
-    <div class="hint">
-      <b>인터랙티브</b>. 하단 탭바로 4개 섹션 이동.<br/>
-      ARM 화면에서 <b>"시퀀스 편집"</b> → 카테고리 4개 순서대로 탭 → 저장.<br/>
-      채팅방 행 탭 → 인라인 상세 패널 펼침.
-    </div>
-  </aside>
+<div class="wrap">
 
-  <div id="device-root"></div>
+  <header class="hero">
+    <div class="codename">Admin · Mobile · 전체 화면 카탈로그</div>
+    <h1>관리자 콘솔</h1>
+    <p class="sub">
+      DailyNews MVP 운영용 모바일 관리자 앱. 진입은 사용자 앱의 <b>ARM 시퀀스</b> 로만 가능 — 7·1·3·5 (사회 → 헤드라인 → 경제 → 문화) 입력 시 <code>AdminScreen.html</code> 으로 이동.
+    </p>
+    <div class="pill-row">
+      <span class="pill">진입 시퀀스 <code>7·1·3·5</code></span>
+      <span class="pill">다크 테마 · 오렌지 액센트</span>
+      <span class="pill">iPhone 14 · 390 × 844</span>
+      <span class="pill">하단 탭 4 + User Detail</span>
+    </div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- 모든 탭 + 디테일 화면                                                -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <div class="section-label">5 화면 / 4 탭</div>
+  <div class="grid">
+
+    <div class="col">
+      <div class="col-num">01</div>
+      <div class="col-label">홈 (Overview)</div>
+      <div id="dev-home"></div>
+      <div class="col-sub">
+        통계 카드 3개 (전체 사용자 / 활성 채팅방 / 누적 메시지) + 3 메뉴 진입점. MVP 운영 정책 안내 박스.
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="col-num">02</div>
+      <div class="col-label">사용자 관리</div>
+      <div id="dev-users"></div>
+      <div class="col-sub">
+        검색 + 4-segment 필터 (전체/활성/미인증/차단). 행 탭 → 상세. <b>활성 3</b> · <b>미인증 2</b> · <b>차단 1</b>.
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="col-num">03</div>
+      <div class="col-label">사용자 상세</div>
+      <div id="dev-user-detail"></div>
+      <div class="col-sub">
+        프로필 카드 + 계정 정보 + 페어 연결 + 잠금 코드 (편집 진입) + 위험 작업 (차단 / 삭제). <code>@jun_2026</code> 예시.
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="col-num">04</div>
+      <div class="col-label">ARM 관리</div>
+      <div id="dev-arm"></div>
+      <div class="col-sub">
+        현재 시퀀스 카드 4개 + "시퀀스 편집" 인터랙티브 + 카테고리 위치 매핑. <code>5·3·1·7</code> 변경 시 모든 unlock_token 무효화.
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="col-num">05</div>
+      <div class="col-label">채팅 데이터</div>
+      <div id="dev-chats"></div>
+      <div class="col-sub">
+        통계 3개 + 채팅방 리스트 (페어 아바타 / UUID / 용량 / 마지막 활동). 행 탭 → 인라인 상세 + 메시지 내보내기 / 삭제. 일괄 작업.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Access mechanism note -->
+  <div class="feature-box">
+    <div>
+      <h3>진입 메커니즘</h3>
+      <p>
+        사용자 앱의 NewsFeedScreen 에서 <b>DailyNews 워드마크 탭</b> → ARM (8초) → 카테고리 pill <code>7·1·3·5</code> 시퀀스 → <code>localStorage.dn_admin = "1"</code> 세팅 후 <code>AdminScreen.html</code> 로 이동.
+      </p>
+      <p style="margin-top:8px">RN production: <code>navigation.navigate('AdminStack')</code> 로 별도 네비게이션 스택 진입.</p>
+    </div>
+    <div>
+      <h3>채팅 시퀀스와 분리</h3>
+      <p>
+        일반 사용자 시퀀스 = <code>5·3·1·7</code> (문화·경제·헤드라인·사회) → 채팅 unlock.<br/>
+        Admin 시퀀스 = <code>7·1·3·5</code> (역순) → Admin 콘솔.<br/>
+        한 ARM 세션에서 둘 다 검증 — 매치되는 쪽으로 라우팅.
+      </p>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -81,17 +213,27 @@
 <script type="text/babel" src="frames/ios-frame.jsx"></script>
 <script type="text/babel" src="screens/admin-screen.jsx"></script>
 
-<script type="text/babel" data-presets="env,react" data-screen-label="Admin Mobile">
-  function App() {
+<script type="text/babel" data-presets="env,react">
+  function Wrap({ tab, userId, label }) {
     return (
       <IOSDevice width={390} height={844} dark={true}>
-        <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }}>
-          <AdminScreen/>
+        <div style={{ paddingTop: 62, height: '100%', boxSizing: 'border-box' }} data-screen-label={label}>
+          <AdminScreen initialTab={tab} initialUserId={userId}/>
         </div>
       </IOSDevice>
     );
   }
-  ReactDOM.createRoot(document.getElementById('device-root')).render(<App/>);
+
+  ReactDOM.createRoot(document.getElementById('dev-home'))
+    .render(<Wrap tab="home" label="Admin Home"/>);
+  ReactDOM.createRoot(document.getElementById('dev-users'))
+    .render(<Wrap tab="users" label="Admin Users"/>);
+  ReactDOM.createRoot(document.getElementById('dev-user-detail'))
+    .render(<Wrap tab="user" userId="jun_2026" label="Admin User Detail"/>);
+  ReactDOM.createRoot(document.getElementById('dev-arm'))
+    .render(<Wrap tab="arm" label="Admin ARM"/>);
+  ReactDOM.createRoot(document.getElementById('dev-chats'))
+    .render(<Wrap tab="chats" label="Admin Chats"/>);
 </script>
 
 </body>

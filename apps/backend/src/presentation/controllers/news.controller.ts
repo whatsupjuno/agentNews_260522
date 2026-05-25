@@ -8,12 +8,12 @@ export class NewsController {
   constructor(private readonly news: NewsService) {}
 
   @Get('news/feed')
-  feed() {
-    return { articles: this.news.getFeed() };
+  async feed() {
+    return { articles: await this.news.getFeed() };
   }
 
   @Get('articles/:id')
-  article(@Param('id') id: string) {
+  async article(@Param('id') id: string) {
     return this.news.getArticle(id);
   }
 }
