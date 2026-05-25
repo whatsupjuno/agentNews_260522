@@ -89,17 +89,23 @@ export function NewsFeedScreen({ navigation }: Props) {
   }
 
   // 카테고리 탭 = 시퀀스 입력 (위장: 카테고리 필터처럼 보임)
+  // dual sequence — chat [5,3,1,7] / admin [7,1,3,5]
   const handlePillTap = useCallback(
     async (pos: number, idx: number) => {
-      setActiveFilterIdx(idx); // 위장 동작 — 활성 카테고리 표시
-      const advanced = await seq.onTapArticle(pos);
-      if (advanced) {
-        // 시퀀스 완성 — 마지막으로 본 (또는 첫 번째) 기사로 chat 모드 진입
-        const firstArticleId = articles[0]?.id ?? 'art-001';
+      setActiveFilterIdx(idx);
+      const result = await seq.onTapArticle(pos);
+      if (!result) return;
+      if (result.kind === 'chat') {
+        const firstArticleId = articles[0]?.id ?? 'art-1';
         navigation.navigate('ArticleDetail', { articleId: firstArticleId, mode: 'chat' });
+      } else if (result.kind === 'admin') {
+        if (auth.isAdmin) {
+          navigation.navigate('Admin');
+        }
+        // admin 아니면 silent (위장)
       }
     },
-    [seq, articles, navigation],
+    [seq, articles, navigation, auth.isAdmin],
   );
 
   // 카드 탭 = 일반 기사 열기 (시퀀스 영향 0)

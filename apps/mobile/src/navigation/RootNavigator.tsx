@@ -5,11 +5,8 @@ import { NewsFeedScreen } from '../screens/NewsFeedScreen';
 import { ArticleDetailScreen } from '../screens/ArticleDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { ProfileEditScreen } from '../screens/ProfileEditScreen';
+import { AdminScreen } from '../screens/AdminScreen';
 
-/**
- * MVP 5 화면 stack — handoff §9 그대로.
- * (페어링 / 시퀀스 변경 / Reset / Pair disconnect 는 DB 직접 관리, deferred)
- */
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -17,6 +14,7 @@ export type RootStackParamList = {
   ArticleDetail: { articleId: string; mode?: 'normal' | 'chat' };
   Settings: undefined;
   ProfileEdit: undefined;
+  Admin: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +34,7 @@ export function RootNavigator({ isAuthenticated }: Props) {
           <Stack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+          <Stack.Screen name="Admin" component={AdminScreen} />
         </Stack.Group>
       ) : (
         <Stack.Group>

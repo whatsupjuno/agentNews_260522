@@ -10,6 +10,7 @@ import { NewsModule } from './news.module';
 import { SequenceModule } from './sequence.module';
 import { MessageModule } from './message.module';
 import { UserModule } from './user.module';
+import { AdminModule } from './admin.module';
 import { HealthController } from './presentation/controllers/health.controller';
 
 @Module({
@@ -24,6 +25,7 @@ import { HealthController } from './presentation/controllers/health.controller';
     SequenceModule,
     MessageModule,
     UserModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [],

@@ -17,6 +17,7 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   status: 'loading' | 'unauthenticated' | 'authenticated';
+  isAdmin: boolean;
 }
 
 interface AuthContextValue extends AuthState {
@@ -51,12 +52,23 @@ function isJwtExpired(token: string, marginSec = 0): boolean {
   }
 }
 
+/** /admin/me/whoami 호출 → admin 인지 검증 (403 면 false) */
+async function checkIsAdmin(accessToken: string): Promise<boolean> {
+  try {
+    await apiFetch('/admin/me/whoami', { accessToken });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
     accessToken: null,
     refreshToken: null,
     status: 'loading',
+    isAdmin: false,
   });
 
   useEffect(() => {
@@ -74,9 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           accessToken,
           refreshToken,
           status: 'authenticated',
+          isAdmin: false,
         });
-        // 부팅 후 push token 등록 (silent)
         void registerPushTokenWithBackend(accessToken);
+        void checkIsAdmin(accessToken).then((ok) => setState((s) => ({ ...s, isAdmin: ok })));
       } else {
         setState((s) => ({ ...s, status: 'unauthenticated' }));
       }
@@ -90,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken: null,
       refreshToken: null,
       status: 'unauthenticated',
+      isAdmin: false,
     });
   }
 
@@ -106,9 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken: res.accessToken,
       refreshToken: res.refreshToken,
       status: 'authenticated',
+      isAdmin: false,
     });
-    // push token 백엔드 등록 (fire-and-forget)
     void registerPushTokenWithBackend(res.accessToken);
+    void checkIsAdmin(res.accessToken).then((ok) => setState((s) => ({ ...s, isAdmin: ok })));
   }
 
   const value: AuthContextValue = useMemo(
@@ -129,7 +144,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const rt = state.refreshToken;
         await secureStore.clear();
         resetPushRegistrationCache();
-        setState({ user: null, accessToken: null, refreshToken: null, status: 'unauthenticated' });
+        setState({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          status: 'unauthenticated',
+          isAdmin: false,
+        });
         if (rt) {
           try {
             await apiFetch('/auth/logout', { method: 'POST', refreshToken: rt });
