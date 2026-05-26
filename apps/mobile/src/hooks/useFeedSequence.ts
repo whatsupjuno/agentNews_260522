@@ -39,6 +39,15 @@ export function useFeedSequence(): FeedSequenceApi {
   const auth = useAuth();
   const unlock = useUnlock();
 
+  // NewsFeed mount 시 항상 최신 sequence config fetch — 푸시 cold start race condition 방지
+  useEffect(() => {
+    void (async () => {
+      const token = await auth.getValidAccessToken();
+      if (token) await loadSequenceConfig(token);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const disarm = useCallback(() => {
     if (armTimerRef.current) {
       clearTimeout(armTimerRef.current);
