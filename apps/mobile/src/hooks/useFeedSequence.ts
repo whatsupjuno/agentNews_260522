@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../store/auth';
 import { useUnlock } from '../store/unlock';
-import { getSequenceConfig } from '../services/sequenceConfig';
+import { getSequenceConfig, loadSequenceConfig } from '../services/sequenceConfig';
 
 const ARM_TIMEOUT_MS = 8000;
 const TAP_RATE_LIMIT_MS = 1000;
