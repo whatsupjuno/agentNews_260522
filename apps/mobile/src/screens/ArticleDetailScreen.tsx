@@ -216,14 +216,20 @@ function ChatBody({ article: _article }: { article: Article | null }) {
   }
 
   const kbVisible = kbHeight > 0;
+  const [inputBarH, setInputBarH] = useState(50);
 
-  // KAV 대신 컨테이너에 marginBottom 적용. 키보드 활성 시 +1px = q줄과 입력바 사이 간격.
+  // input bar 를 absolute 로 화면 bottom 에서 kbHeight 위에 강제 배치.
+  // marginBottom 방식은 SafeAreaView + RN 0.81 New Arch 환경에서 안 먹는 경우 있음.
   return (
-    <View style={{ flex: 1, marginBottom: kbVisible ? kbHeight : 0 }}>
+    <View style={{ flex: 1 }}>
       <FlatList
         ref={listRef}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 3 }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 12,
+          paddingBottom: inputBarH + 3,
+        }}
         data={chat.messages}
         keyExtractor={(m) => m.externalId}
         renderItem={({ item, index }) => {
@@ -245,10 +251,14 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }
       />
 
-      {/* Input bar — 키보드 활성 시 home-indicator 영역 padding 제거.
-          모든 padding/layout 을 inline 으로 (NativeWind className 우선순위 회피) */}
+      {/* Input bar — absolute, bottom: kbHeight 로 키보드 위에 강제 배치 */}
       <View
+        onLayout={(e) => setInputBarH(e.nativeEvent.layout.height)}
         style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: kbHeight,
           flexDirection: 'row',
           alignItems: 'flex-end',
           backgroundColor: '#ff0000',
@@ -261,7 +271,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }}
       >
         <Text style={{ position: 'absolute', top: -18, left: 8, fontSize: 12, color: '#000', backgroundColor: '#ffff00', paddingHorizontal: 4 }}>
-          DBG v10 kb={kbHeight} vis={String(kbVisible)}
+          DBG v11 kb={kbHeight} h={inputBarH}
         </Text>
         <Pressable className="w-9 h-9 rounded-pill bg-chip items-center justify-center mr-2">
           <Text className="text-text" style={{ fontSize: 18 }}>+</Text>
