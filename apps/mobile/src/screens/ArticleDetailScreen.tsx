@@ -217,13 +217,13 @@ function ChatBody({ article: _article }: { article: Article | null }) {
 
   const kbVisible = kbHeight > 0;
 
-  // KAV 대신 컨테이너에 marginBottom: kbHeight 적용. flex column 전체가 키보드 위로 밀림.
+  // KAV 대신 컨테이너에 marginBottom 적용. 키보드 활성 시 +1px = q줄과 입력바 사이 간격.
   return (
-    <View style={{ flex: 1, marginBottom: kbHeight }}>
+    <View style={{ flex: 1, marginBottom: kbVisible ? kbHeight + 1 : 0 }}>
       <FlatList
         ref={listRef}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 2 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 3 }}
         data={chat.messages}
         keyExtractor={(m) => m.externalId}
         renderItem={({ item, index }) => {
@@ -254,7 +254,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           backgroundColor: '#ffffff',
           paddingLeft: 12,
           paddingRight: 12,
-          paddingTop: 8,
+          paddingTop: 1,
           paddingBottom: kbVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
