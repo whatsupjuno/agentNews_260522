@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   FlatList,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -191,13 +192,20 @@ function ArticleBody({ article }: { article: Article | null }) {
 function ChatBody({ article: _article }: { article: Article | null }) {
   const chat = useChat();
   const [input, setInput] = useState('');
+  const [kbVisible, setKbVisible] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
+  // 키보드 표시/숨김 감지 — 입력바 paddingBottom 동적 조절
   useEffect(() => {
-    if (chat.messages.length > 0) {
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
-    }
-  }, [chat.messages.length]);
+    const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const s = Keyboard.addListener(showEv, () => setKbVisible(true));
+    const h = Keyboard.addListener(hideEv, () => setKbVisible(false));
+    return () => {
+      s.remove();
+      h.remove();
+    };
+  }, []);
 
   function onSubmit() {
     if (!input.trim()) return;
@@ -224,6 +232,9 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           const grouped = prev && prev.fromMe === item.fromMe && msToSec(item, prev) < 60;
           return <Bubble msg={item} groupedAbove={!!grouped} />;
         }}
+        // content layout 이 변할 때마다 (mount, 새 메시지, image/multiline 늦은 layout) 항상 끝으로
+        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+        onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
         ListEmptyComponent={
           !chat.loading ? (
             <View className="items-center mt-8">
@@ -235,11 +246,11 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }
       />
 
-      {/* Input bar */}
+      {/* Input bar — 키보드 활성 시 home-indicator 영역 padding 제거 */}
       <View
         className="flex-row items-end px-3 py-2 bg-surface"
         style={{
-          paddingBottom: Platform.OS === 'ios' ? 30 : 14,
+          paddingBottom: kbVisible ? 8 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
         }}
