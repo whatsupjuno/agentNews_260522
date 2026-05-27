@@ -251,7 +251,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         style={{
           flexDirection: 'row',
           alignItems: 'flex-end',
-          backgroundColor: '#ffffff',
+          backgroundColor: '#ff0000',
           paddingLeft: 12,
           paddingRight: 12,
           paddingTop: 0,
@@ -260,6 +260,9 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           borderTopColor: 'rgba(60,60,67,0.12)',
         }}
       >
+        <Text style={{ position: 'absolute', top: -18, left: 8, fontSize: 12, color: '#000', backgroundColor: '#ffff00', paddingHorizontal: 4 }}>
+          DBG v10 kb={kbHeight} vis={String(kbVisible)}
+        </Text>
         <Pressable className="w-9 h-9 rounded-pill bg-chip items-center justify-center mr-2">
           <Text className="text-text" style={{ fontSize: 18 }}>+</Text>
         </Pressable>
