@@ -224,7 +224,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
       <FlatList
         ref={listRef}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 0 }}
         data={chat.messages}
         keyExtractor={(m) => m.externalId}
         renderItem={({ item, index }) => {
