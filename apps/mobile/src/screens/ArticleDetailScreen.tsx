@@ -224,7 +224,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
       <FlatList
         ref={listRef}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}
         data={chat.messages}
         keyExtractor={(m) => m.externalId}
         renderItem={({ item, index }) => {
@@ -250,7 +250,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
       <View
         className="flex-row items-end px-3 py-2 bg-surface"
         style={{
-          paddingBottom: kbVisible ? 8 : Platform.OS === 'ios' ? 30 : 14,
+          paddingBottom: kbVisible ? 6.5 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
         }}
@@ -306,7 +306,7 @@ function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean
             color: '#ff9500',
             fontWeight: '600',
             marginRight: 4,
-            marginBottom: 3,
+            marginBottom: 0,
           }}
         >
           1
