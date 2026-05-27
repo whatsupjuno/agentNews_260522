@@ -254,7 +254,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           backgroundColor: '#ffffff',
           paddingLeft: 12,
           paddingRight: 12,
-          paddingTop: 1,
+          paddingTop: -30,
           paddingBottom: kbVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
