@@ -19,6 +19,7 @@ export interface DecryptedMessage {
   body: string;
   hasAttachment: boolean;
   sentAt: string;
+  readAt: string | null;
   fromMe?: boolean;
 }
 
@@ -60,6 +61,7 @@ export class MessageService {
         body: this.crypto.decryptMessage(r.ciphertext, r.iv, r.tag),
         hasAttachment: r.hasAttachment,
         sentAt: r.sentAt.toISOString(),
+        readAt: r.readAt ? r.readAt.toISOString() : null,
         fromMe: r.senderAgentId === agentId,
       };
     });
@@ -98,6 +100,7 @@ export class MessageService {
       body,
       hasAttachment: false,
       sentAt: now.toISOString(),
+      readAt: null,
       fromMe: true,
     };
     // WS broadcast to pairing channel (both sides). 클라이언트가 fromMe 직접 판단.
@@ -194,8 +197,37 @@ export class MessageService {
         body,
         hasAttachment: false,
         sentAt: now.toISOString(),
+        readAt: null,
       },
     });
+  }
+
+  /**
+   * 채팅 화면에 들어온 사용자가 peer 발신 unread 메시지를 일괄 read 처리.
+   * Read 시각 + 해당 message externalId 목록을 WebSocket 으로 페어에 broadcast.
+   */
+  async markPeerMessagesRead(agentId: string): Promise<{ readAt: string; ids: string[] }> {
+    const now = new Date();
+    const pair = await this.findActivePair(agentId);
+    if (!pair) return { readAt: now.toISOString(), ids: [] };
+    const unread = await this.messages.find({
+      where: {
+        pairingId: pair.id,
+        deletedAt: IsNull(),
+        readAt: IsNull(),
+      },
+    });
+    const peerOnly = unread.filter((m) => m.senderAgentId !== agentId);
+    if (peerOnly.length === 0) return { readAt: now.toISOString(), ids: [] };
+    for (const m of peerOnly) m.readAt = now;
+    await this.messages.save(peerOnly);
+    const ids = peerOnly.map((m) => m.externalId);
+    this.gateway.broadcastToPairing(pair.id, {
+      type: 'read',
+      messageExternalIds: ids,
+      readAt: now.toISOString(),
+    });
+    return { readAt: now.toISOString(), ids };
   }
 
   private async findActivePair(agentId: string): Promise<PairingEntity | null> {

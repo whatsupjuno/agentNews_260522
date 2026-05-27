@@ -20,4 +20,9 @@ export class MessageController {
     void this.messages.maybeEchoReply(req.agent.id, dto.body);
     return msg;
   }
+
+  @Post('read')
+  async markRead(@Req() req: AuthedRequest) {
+    return this.messages.markPeerMessagesRead(req.agent.id);
+  }
 }

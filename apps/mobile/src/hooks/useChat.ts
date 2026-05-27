@@ -12,6 +12,7 @@ export interface ChatMessage {
   body: string;
   hasAttachment: boolean;
   sentAt: string;
+  readAt: string | null;
   fromMe?: boolean;
 }
 
@@ -28,7 +29,7 @@ export function useChat(): UseChatApi {
   const [loading, setLoading] = useState(true);
   const socketRef = useRef<Socket | null>(null);
 
-  // 1. 메시지 history fetch
+  // 1. 메시지 history fetch + peer 메시지 read 처리
   useEffect(() => {
     void (async () => {
       const access = await auth.getValidAccessToken();
@@ -42,12 +43,21 @@ export function useChat(): UseChatApi {
           unlockToken: unlock.token,
         });
         const myExtId = auth.user?.externalId;
+        const now = new Date().toISOString();
         setMessages(
-          (res.messages ?? []).map((m) => ({
-            ...m,
-            fromMe: m.senderExternalId === myExtId,
-          })),
+          (res.messages ?? []).map((m) => {
+            const fromMe = m.senderExternalId === myExtId;
+            // 화면 진입 = peer 메시지 즉시 read 로컬 반영 (서버 ACK 전 미리 보이기)
+            const readAt = !fromMe && !m.readAt ? now : m.readAt ?? null;
+            return { ...m, readAt, fromMe };
+          }),
         );
+        // 서버에 read mark — broadcast 가 peer 에게 전달됨
+        void apiFetch('/messages/read', {
+          method: 'POST',
+          accessToken: access,
+          unlockToken: unlock.token,
+        }).catch(() => {});
       } catch {
         // silent — 위장
       } finally {
@@ -73,15 +83,34 @@ export function useChat(): UseChatApi {
       transports: ['websocket'],
     });
     socketRef.current = sock;
-    sock.on('message', (payload: { type: string; message: ChatMessage }) => {
-      if (payload?.type !== 'message') return;
-      const m = payload.message;
-      const myExtId = auth.user?.externalId;
-      setMessages((prev) => {
-        if (prev.find((p) => p.externalId === m.externalId)) return prev;
-        return [...prev, { ...m, fromMe: m.senderExternalId === myExtId }];
-      });
-    });
+    sock.on(
+      'message',
+      (payload: {
+        type: string;
+        message?: ChatMessage;
+        messageExternalIds?: string[];
+        readAt?: string;
+      }) => {
+        if (payload?.type === 'message' && payload.message) {
+          const m = payload.message;
+          const myExtId = auth.user?.externalId;
+          setMessages((prev) => {
+            if (prev.find((p) => p.externalId === m.externalId)) return prev;
+            return [...prev, { ...m, fromMe: m.senderExternalId === myExtId }];
+          });
+        } else if (
+          payload?.type === 'read' &&
+          Array.isArray(payload.messageExternalIds) &&
+          payload.readAt
+        ) {
+          const ids = new Set(payload.messageExternalIds);
+          const readAt = payload.readAt;
+          setMessages((prev) =>
+            prev.map((m) => (ids.has(m.externalId) ? { ...m, readAt } : m)),
+          );
+        }
+      },
+    );
     return () => {
       sock.disconnect();
       socketRef.current = null;

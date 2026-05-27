@@ -29,4 +29,7 @@ export class MessageEntity extends SoftDeletableEntity {
 
   @Column({ type: 'timestamptz', name: 'sent_at' })
   sentAt!: Date;
+
+  @Column({ type: 'timestamptz', name: 'read_at', nullable: true })
+  readAt!: Date | null;
 }

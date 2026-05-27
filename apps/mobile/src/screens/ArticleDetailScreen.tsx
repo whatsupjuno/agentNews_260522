@@ -277,14 +277,30 @@ function msToSec(a: ChatMessage, b: ChatMessage): number {
 
 function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean }) {
   const me = msg.fromMe;
+  const unreadByPeer = me && !msg.readAt;
   return (
     <View
       style={{
         alignSelf: me ? 'flex-end' : 'flex-start',
         maxWidth: '78%',
         marginTop: groupedAbove ? 3 : 10,
+        flexDirection: 'row',
+        alignItems: 'flex-end',
       }}
     >
+      {unreadByPeer ? (
+        <Text
+          style={{
+            fontSize: 11,
+            color: '#ff9500',
+            fontWeight: '600',
+            marginRight: 4,
+            marginBottom: 3,
+          }}
+        >
+          1
+        </Text>
+      ) : null}
       <View
         style={{
           backgroundColor: me ? '#007aff' : '#e9e9eb',
@@ -295,6 +311,7 @@ function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean
           borderTopLeftRadius: !me && groupedAbove ? 4 : 22,
           paddingHorizontal: 14,
           paddingVertical: 9,
+          flexShrink: 1,
         }}
       >
         <Text style={{ color: me ? '#fff' : '#1d1d1f', fontSize: 17, lineHeight: 22 }}>
