@@ -250,7 +250,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
       <View
         className="flex-row items-end px-3 py-2 bg-surface"
         style={{
-          paddingBottom: kbVisible ? 6.5 : Platform.OS === 'ios' ? 30 : 14,
+          paddingBottom: kbVisible ? 4 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
         }}
