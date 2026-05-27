@@ -3,7 +3,6 @@ import {
   FlatList,
   Image,
   Keyboard,
-  KeyboardAvoidingView,
   Linking,
   Platform,
   Pressable,
@@ -192,23 +191,17 @@ function ArticleBody({ article }: { article: Article | null }) {
 function ChatBody({ article: _article }: { article: Article | null }) {
   const chat = useChat();
   const [input, setInput] = useState('');
-  const [kbVisible, setKbVisible] = useState(false);
+  const [kbHeight, setKbHeight] = useState(0);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
-  // 키보드 표시/숨김 감지 — 입력바 paddingBottom 동적 조절
+  // 키보드 높이 직접 측정 — KAV 의 padding behavior 가 SDK 54 New Arch 에서 broken 이라 manual.
   useEffect(() => {
     const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const s = Keyboard.addListener(showEv, (e) => {
-      // eslint-disable-next-line no-console
-      console.log('[kb] SHOW height=', e?.endCoordinates?.height);
-      setKbVisible(true);
+      setKbHeight(e?.endCoordinates?.height ?? 0);
     });
-    const h = Keyboard.addListener(hideEv, () => {
-      // eslint-disable-next-line no-console
-      console.log('[kb] HIDE');
-      setKbVisible(false);
-    });
+    const h = Keyboard.addListener(hideEv, () => setKbHeight(0));
     return () => {
       s.remove();
       h.remove();
@@ -222,13 +215,11 @@ function ChatBody({ article: _article }: { article: Article | null }) {
     void chat.send(body);
   }
 
-  // v3: pinned context card 제거. 헤더 바로 아래에서 메시지 리스트 시작.
+  const kbVisible = kbHeight > 0;
+
+  // KAV 대신 컨테이너에 marginBottom: kbHeight 적용. flex column 전체가 키보드 위로 밀림.
   return (
-    <KeyboardAvoidingView
-      className="flex-1"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={0}
-    >
+    <View style={{ flex: 1, marginBottom: kbHeight }}>
       <FlatList
         ref={listRef}
         className="flex-1"
@@ -292,7 +283,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           <Text className="text-inverse" style={{ fontSize: 18, fontWeight: '700', lineHeight: 18 }}>↑</Text>
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
