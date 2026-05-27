@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -9,6 +9,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -188,25 +189,40 @@ function ArticleBody({ article }: { article: Article | null }) {
   );
 }
 
-function ChatBody({ article: _article }: { article: Article | null }) {
-  const chat = useChat();
-  const [input, setInput] = useState('');
-  const [kbHeight, setKbHeight] = useState(0);
-  const listRef = useRef<FlatList<ChatMessage>>(null);
+/**
+ * Keyboard inset = windowHeight - endCoordinates.screenY.
+ * height 가 아닌 screenY 를 쓰는 이유: SafeArea bottom inset 등을 고려한 정확한 keyboard top 위치.
+ */
+function useKeyboardInset(): number {
+  const { height: windowHeight } = useWindowDimensions();
+  const [keyboardTopY, setKeyboardTopY] = useState<number | null>(null);
 
-  // 키보드 높이 직접 측정 — KAV 의 padding behavior 가 SDK 54 New Arch 에서 broken 이라 manual.
   useEffect(() => {
     const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const s = Keyboard.addListener(showEv, (e) => {
-      setKbHeight(e?.endCoordinates?.height ?? 0);
+    const show = Keyboard.addListener(showEv, (e) => {
+      setKeyboardTopY(e?.endCoordinates?.screenY ?? null);
     });
-    const h = Keyboard.addListener(hideEv, () => setKbHeight(0));
+    const hide = Keyboard.addListener(hideEv, () => setKeyboardTopY(null));
     return () => {
-      s.remove();
-      h.remove();
+      show.remove();
+      hide.remove();
     };
   }, []);
+
+  return useMemo(() => {
+    if (keyboardTopY == null) return 0;
+    return Math.max(0, windowHeight - keyboardTopY);
+  }, [windowHeight, keyboardTopY]);
+}
+
+function ChatBody({ article: _article }: { article: Article | null }) {
+  const chat = useChat();
+  const [input, setInput] = useState('');
+  const keyboardInset = useKeyboardInset();
+  const keyboardVisible = keyboardInset > 0;
+  const [inputBarH, setInputBarH] = useState(50);
+  const listRef = useRef<FlatList<ChatMessage>>(null);
 
   function onSubmit() {
     if (!input.trim()) return;
@@ -215,20 +231,17 @@ function ChatBody({ article: _article }: { article: Article | null }) {
     void chat.send(body);
   }
 
-  const kbVisible = kbHeight > 0;
-  const [inputBarH, setInputBarH] = useState(50);
-
-  // input bar 를 absolute 로 화면 bottom 에서 kbHeight 위에 강제 배치.
-  // marginBottom 방식은 SafeAreaView + RN 0.81 New Arch 환경에서 안 먹는 경우 있음.
+  // composer absolute + bottom = keyboardInset + 1 (Dex guide 4-1, §5).
+  // FlatList paddingBottom 에 keyboardInset + inputBarH + 3 추가 — 마지막 메시지가 keyboard/composer 에 안 가려짐.
   return (
     <View style={{ flex: 1 }}>
       <FlatList
         ref={listRef}
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 12,
-          paddingBottom: kbHeight + inputBarH + 3,
+          paddingBottom: keyboardInset + inputBarH + 3,
         }}
         data={chat.messages}
         keyExtractor={(m) => m.externalId}
@@ -251,28 +264,41 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }
       />
 
-      {/* Input bar — absolute, bottom: kbHeight 로 키보드 위에 강제 배치 */}
+      {/* Debug: keyboard top edge 위치 시각화 (§7) — 검증 후 제거 */}
+      {keyboardVisible ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: keyboardInset,
+            height: 1,
+            backgroundColor: 'lime',
+            zIndex: 999,
+          }}
+        />
+      ) : null}
+
+      {/* Composer — absolute, keyboard top edge 위 1px (§5) */}
       <View
         onLayout={(e) => setInputBarH(e.nativeEvent.layout.height)}
         style={{
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: kbHeight,
+          bottom: keyboardInset + (keyboardVisible ? 1 : 0),
           flexDirection: 'row',
           alignItems: 'flex-end',
-          backgroundColor: '#ff0000',
+          backgroundColor: '#ffffff',
           paddingLeft: 12,
           paddingRight: 12,
           paddingTop: 0,
-          paddingBottom: kbVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
+          paddingBottom: keyboardVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
         }}
       >
-        <Text style={{ position: 'absolute', top: -18, left: 8, fontSize: 12, color: '#000', backgroundColor: '#ffff00', paddingHorizontal: 4 }}>
-          DBG v11 kb={kbHeight} h={inputBarH}
-        </Text>
         <Pressable className="w-9 h-9 rounded-pill bg-chip items-center justify-center mr-2">
           <Text className="text-text" style={{ fontSize: 18 }}>+</Text>
         </Pressable>
