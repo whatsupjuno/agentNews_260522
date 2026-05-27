@@ -199,8 +199,16 @@ function ChatBody({ article: _article }: { article: Article | null }) {
   useEffect(() => {
     const showEv = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEv = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const s = Keyboard.addListener(showEv, () => setKbVisible(true));
-    const h = Keyboard.addListener(hideEv, () => setKbVisible(false));
+    const s = Keyboard.addListener(showEv, (e) => {
+      // eslint-disable-next-line no-console
+      console.log('[kb] SHOW height=', e?.endCoordinates?.height);
+      setKbVisible(true);
+    });
+    const h = Keyboard.addListener(hideEv, () => {
+      // eslint-disable-next-line no-console
+      console.log('[kb] HIDE');
+      setKbVisible(false);
+    });
     return () => {
       s.remove();
       h.remove();
@@ -246,10 +254,15 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }
       />
 
-      {/* Input bar — 키보드 활성 시 home-indicator 영역 padding 제거 */}
+      {/* Input bar — 키보드 활성 시 home-indicator 영역 padding 제거.
+          모든 padding/layout 을 inline 으로 (NativeWind className 우선순위 회피) */}
       <View
-        className="flex-row items-end px-3 bg-surface"
         style={{
+          flexDirection: 'row',
+          alignItems: 'flex-end',
+          backgroundColor: '#ffffff',
+          paddingLeft: 12,
+          paddingRight: 12,
           paddingTop: 8,
           paddingBottom: kbVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
