@@ -219,7 +219,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
 
   // KAV 대신 컨테이너에 marginBottom 적용. 키보드 활성 시 +1px = q줄과 입력바 사이 간격.
   return (
-    <View style={{ flex: 1, marginBottom: kbVisible ? kbHeight + 30 : 0 }}>
+    <View style={{ flex: 1, marginBottom: kbVisible ? kbHeight : 0 }}>
       <FlatList
         ref={listRef}
         className="flex-1"
@@ -254,7 +254,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           backgroundColor: '#ffffff',
           paddingLeft: 12,
           paddingRight: 12,
-          paddingTop: -30,
+          paddingTop: 0,
           paddingBottom: kbVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
