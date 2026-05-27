@@ -44,6 +44,8 @@ Thumbs.db
 coverage/
 .nyc_output/
 junit.xml
+test-results/
+playwright-report/
 
 # Expo / RN
 apps/mobile/.expo/

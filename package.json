@@ -23,7 +23,8 @@
     "test": "pnpm -r test"
   },
   "devDependencies": {
-    "typescript": "5.5.4",
-    "prettier": "3.3.3"
+    "@playwright/test": "^1.60.0",
+    "prettier": "3.3.3",
+    "typescript": "5.5.4"
   }
 }
