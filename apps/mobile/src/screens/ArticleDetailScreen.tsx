@@ -228,7 +228,7 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 12,
-          paddingBottom: inputBarH + 3,
+          paddingBottom: kbHeight + inputBarH + 3,
         }}
         data={chat.messages}
         keyExtractor={(m) => m.externalId}
