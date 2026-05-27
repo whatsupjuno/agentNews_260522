@@ -248,8 +248,9 @@ function ChatBody({ article: _article }: { article: Article | null }) {
 
       {/* Input bar — 키보드 활성 시 home-indicator 영역 padding 제거 */}
       <View
-        className="flex-row items-end px-3 py-2 bg-surface"
+        className="flex-row items-end px-3 bg-surface"
         style={{
+          paddingTop: 8,
           paddingBottom: kbVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
           borderTopWidth: 0.5,
           borderTopColor: 'rgba(60,60,67,0.12)',
