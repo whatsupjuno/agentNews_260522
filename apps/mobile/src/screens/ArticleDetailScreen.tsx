@@ -264,25 +264,13 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }
       />
 
-      {/* Debug: keyboard top edge 위치 시각화 (§7) — 검증 후 제거 */}
-      {keyboardVisible ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: keyboardInset,
-            height: 1,
-            backgroundColor: 'lime',
-            zIndex: 999,
-          }}
-        />
-      ) : null}
-
-      {/* Composer — absolute, keyboard top edge 위 1px (§5) */}
+      {/* Composer — absolute, keyboard top edge 위 1px (§5).
+          onLayout 가드: 1px 이상 변할 때만 setState → infinite re-render 방지. */}
       <View
-        onLayout={(e) => setInputBarH(e.nativeEvent.layout.height)}
+        onLayout={(e) => {
+          const h = e.nativeEvent.layout.height;
+          setInputBarH((prev) => (Math.abs(prev - h) > 1 ? h : prev));
+        }}
         style={{
           position: 'absolute',
           left: 0,
