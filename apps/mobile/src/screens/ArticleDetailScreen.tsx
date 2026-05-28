@@ -12,6 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Svg, { Path as SvgPath, Circle as SvgCircle } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -83,13 +84,19 @@ export function ArticleDetailScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-bg">
-      <Header
-        title={isChat ? '기사 토론' : '기사'}
-        subtitle={article?.source ?? ''}
-        onBack={() => navigation.goBack()}
-        isChat={isChat}
-      />
-      {isChat ? <ChatBody article={article} /> : <ArticleBody article={article} />}
+      {!isChat && (
+        <Header
+          title="기사"
+          subtitle={article?.source ?? ''}
+          onBack={() => navigation.goBack()}
+          isChat={false}
+        />
+      )}
+      {isChat ? (
+        <ChatBody article={article} onBack={() => navigation.goBack()} />
+      ) : (
+        <ArticleBody article={article} />
+      )}
 
       {shouldDisguise ? (
         <BlurView intensity={80} tint="light" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -216,12 +223,19 @@ function useKeyboardInset(): number {
   }, [windowHeight, keyboardTopY]);
 }
 
-function ChatBody({ article: _article }: { article: Article | null }) {
+function ChatBody({
+  article: _article,
+  onBack,
+}: {
+  article: Article | null;
+  onBack: () => void;
+}) {
   const chat = useChat();
   const [input, setInput] = useState('');
   const keyboardInset = useKeyboardInset();
   const keyboardVisible = keyboardInset > 0;
-  const [inputBarH, setInputBarH] = useState(50);
+  const [inputBarH, setInputBarH] = useState(80);
+  const [showScrollDown, setShowScrollDown] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
 
   function onSubmit() {
@@ -231,16 +245,28 @@ function ChatBody({ article: _article }: { article: Article | null }) {
     void chat.send(body);
   }
 
-  // composer absolute + bottom = keyboardInset + 1 (Dex guide 4-1, §5).
-  // FlatList paddingBottom 에 keyboardInset + inputBarH + 3 추가 — 마지막 메시지가 keyboard/composer 에 안 가려짐.
+  // 첫 메시지 위 day separator 텍스트
+  const daySep = useMemo(() => {
+    const now = new Date();
+    const ampm = now.getHours() < 12 ? '오전' : '오후';
+    const hr = ((now.getHours() + 11) % 12) + 1;
+    return `오늘 ${ampm} ${hr}:${String(now.getMinutes()).padStart(2, '0')}`;
+  }, []);
+
+  function onListScroll(e: { nativeEvent: { contentOffset: { y: number }; contentSize: { height: number }; layoutMeasurement: { height: number } } }) {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    const distFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
+    setShowScrollDown(distFromBottom > 200);
+  }
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <FlatList
         ref={listRef}
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: 12,
+          paddingTop: 64,
           paddingBottom: keyboardInset + inputBarH + 3,
         }}
         data={chat.messages}
@@ -250,7 +276,24 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           const grouped = prev && prev.fromMe === item.fromMe && msToSec(item, prev) < 60;
           return <Bubble msg={item} groupedAbove={!!grouped} />;
         }}
-        // content layout 이 변할 때마다 (mount, 새 메시지, image/multiline 늦은 layout) 항상 끝으로
+        ListHeaderComponent={
+          chat.messages.length > 0 ? (
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 11,
+                color: '#86868b',
+                marginBottom: 14,
+                letterSpacing: 0.2,
+                fontWeight: '500',
+              }}
+            >
+              {daySep}
+            </Text>
+          ) : null
+        }
+        onScroll={onListScroll}
+        scrollEventThrottle={64}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
         ListEmptyComponent={
@@ -264,8 +307,71 @@ function ChatBody({ article: _article }: { article: Article | null }) {
         }
       />
 
-      {/* Composer — absolute, keyboard top edge 위 1px (§5).
-          onLayout 가드: 1px 이상 변할 때만 setState → infinite re-render 방지. */}
+      {/* Floating top chrome — back pill (chat 모드 헤더 대신) */}
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: 'absolute',
+          top: 10,
+          left: 12,
+          right: 12,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 25,
+        }}
+      >
+        <Pressable
+          onPress={onBack}
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.86)',
+            borderWidth: 0.5,
+            borderColor: 'rgba(60,60,67,0.10)',
+            borderRadius: 999,
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            shadowColor: '#000',
+            shadowOpacity: 0.06,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 2,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#1d1d1f', lineHeight: 18 }}>‹</Text>
+        </Pressable>
+      </View>
+
+      {/* Scroll-to-bottom 플로팅 버튼 */}
+      {showScrollDown ? (
+        <Pressable
+          onPress={() => listRef.current?.scrollToEnd({ animated: true })}
+          style={{
+            position: 'absolute',
+            alignSelf: 'center',
+            bottom: keyboardInset + inputBarH + 12,
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderWidth: 0.5,
+            borderColor: 'rgba(60,60,67,0.12)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: '#000',
+            shadowOpacity: 0.08,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 3,
+            zIndex: 28,
+          }}
+        >
+          <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
+            <SvgPath d="M2 5l5 5 5-5" stroke="#1d1d1f" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+        </Pressable>
+      ) : null}
+
+      {/* Composer — 카드 형식, absolute. 키보드 위 1px (활성 시). */}
       <View
         onLayout={(e) => {
           const h = e.nativeEvent.layout.height;
@@ -276,39 +382,67 @@ function ChatBody({ article: _article }: { article: Article | null }) {
           left: 0,
           right: 0,
           bottom: keyboardInset + (keyboardVisible ? 1 : 0),
-          flexDirection: 'row',
-          alignItems: 'flex-end',
+          paddingHorizontal: 12,
+          paddingTop: 10,
+          paddingBottom: keyboardVisible ? 8 : Platform.OS === 'ios' ? 30 : 14,
           backgroundColor: '#ffffff',
-          paddingLeft: 12,
-          paddingRight: 12,
-          paddingTop: 0,
-          paddingBottom: keyboardVisible ? 1 : Platform.OS === 'ios' ? 30 : 14,
-          borderTopWidth: 0.5,
-          borderTopColor: 'rgba(60,60,67,0.12)',
         }}
       >
-        <Pressable className="w-9 h-9 rounded-pill bg-chip items-center justify-center mr-2">
-          <Text className="text-text" style={{ fontSize: 18 }}>+</Text>
-        </Pressable>
-        <View className="flex-1 bg-surface mr-2" style={{ borderWidth: 0.5, borderColor: 'rgba(60,60,67,0.12)', borderRadius: 22 }}>
+        <View
+          style={{
+            backgroundColor: '#f4f4f6',
+            borderRadius: 24,
+            paddingHorizontal: 16,
+            paddingTop: 14,
+            paddingBottom: 10,
+            shadowColor: '#000',
+            shadowOpacity: 0.04,
+            shadowRadius: 3,
+            shadowOffset: { width: 0, height: 1 },
+          }}
+        >
           <TextInput
-            className="text-text"
-            style={{ paddingHorizontal: 12, paddingVertical: 8, fontSize: 16, maxHeight: 120 }}
+            style={{
+              fontSize: 17,
+              color: '#1d1d1f',
+              letterSpacing: -0.2,
+              paddingTop: 0,
+              paddingBottom: 8,
+              maxHeight: 120,
+            }}
             placeholder="댓글 입력"
             placeholderTextColor="#86868b"
             value={input}
             onChangeText={setInput}
             multiline
           />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 2 }}>
+            <Pressable
+              style={{ width: 32, height: 32, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Svg width={22} height={22} viewBox="0 0 22 22" fill="none">
+                <SvgCircle cx={11} cy={11} r={10} stroke="#86868b" strokeWidth={1.8} />
+                <SvgPath d="M11 7v8M7 11h8" stroke="#86868b" strokeWidth={1.8} strokeLinecap="round" />
+              </Svg>
+            </Pressable>
+            <Pressable
+              onPress={onSubmit}
+              disabled={!input.trim()}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 999,
+                backgroundColor: input.trim() ? '#1d1d1f' : '#d6d6db',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Svg width={14} height={14} viewBox="0 0 14 14" fill="none">
+                <SvgPath d="M7 12V2M3 6l4-4 4 4" stroke="#ffffff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </Pressable>
+          </View>
         </View>
-        <Pressable
-          onPress={onSubmit}
-          disabled={!input.trim()}
-          className="w-9 h-9 rounded-pill items-center justify-center"
-          style={{ backgroundColor: input.trim() ? '#007aff' : '#c5c5c7' }}
-        >
-          <Text className="text-inverse" style={{ fontSize: 18, fontWeight: '700', lineHeight: 18 }}>↑</Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -321,12 +455,19 @@ function msToSec(a: ChatMessage, b: ChatMessage): number {
 function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean }) {
   const me = msg.fromMe;
   const unreadByPeer = me && !msg.readAt;
+
+  // 새 디자인: neutral palette — me=dark surface, peer=light surface (iMessage blue 제거)
+  const tail = 20;
+  const pinch = 6;
+  const bg = me ? '#1d1d1f' : '#f0f0f3';
+  const fg = me ? '#ffffff' : '#1d1d1f';
+
   return (
     <View
       style={{
         alignSelf: me ? 'flex-end' : 'flex-start',
         maxWidth: '78%',
-        marginTop: groupedAbove ? 3 : 10,
+        marginTop: groupedAbove ? 2 : 10,
         flexDirection: 'row',
         alignItems: 'flex-end',
       }}
@@ -346,18 +487,25 @@ function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean
       ) : null}
       <View
         style={{
-          backgroundColor: me ? '#007aff' : '#e9e9eb',
-          borderRadius: 22,
-          borderBottomRightRadius: me && !groupedAbove ? 4 : 22,
-          borderTopRightRadius: me && groupedAbove ? 4 : 22,
-          borderBottomLeftRadius: !me && !groupedAbove ? 4 : 22,
-          borderTopLeftRadius: !me && groupedAbove ? 4 : 22,
+          backgroundColor: bg,
+          borderTopLeftRadius: me ? tail : groupedAbove ? pinch : tail,
+          borderTopRightRadius: me && groupedAbove ? pinch : tail,
+          borderBottomLeftRadius: tail,
+          borderBottomRightRadius: me ? tail : tail,
           paddingHorizontal: 14,
-          paddingVertical: 9,
+          paddingTop: 9,
+          paddingBottom: 10,
           flexShrink: 1,
         }}
       >
-        <Text style={{ color: me ? '#fff' : '#1d1d1f', fontSize: 17, lineHeight: 22 }}>
+        <Text
+          style={{
+            color: fg,
+            fontSize: 16,
+            lineHeight: 22,
+            letterSpacing: -0.2,
+          }}
+        >
           {msg.body}
         </Text>
       </View>
