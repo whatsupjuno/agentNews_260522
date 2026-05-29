@@ -2,10 +2,11 @@ import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/com
 import { createHash } from 'node:crypto';
 import { YonhapRssClient } from '../../infrastructure/news/yonhap-rss.client';
 
-/** Stable id 생성 — 같은 url 이면 항상 같은 id. RSS refresh 해도 id 일관. */
-function stableArticleId(url: string | undefined, fallback: string): string {
-  if (!url) return fallback;
-  return 'art-' + createHash('sha1').update(url).digest('hex').slice(0, 12);
+/** Stable + position 결합 id — 같은 url 이 여러 카테고리에 중복 등장해도 unique 보장. */
+function stableArticleId(url: string | undefined, position: number, fallbackIdx: number): string {
+  if (!url) return `art-${position}-${fallbackIdx}`;
+  const h = createHash('sha1').update(url).digest('hex').slice(0, 10);
+  return `art-${position}-${h}`;
 }
 
 export interface FeedArticle {
@@ -85,7 +86,7 @@ export class NewsService implements OnModuleInit {
       }
       const now = Date.now();
       const mapped: FeedArticle[] = articles.map((a, idx) => ({
-        id: stableArticleId(a.url, `art-${a.position}-${idx}`),
+        id: stableArticleId(a.url, a.position, idx),
         feedIndex: a.position,
         kind: 'standard',
         eyebrow: a.categoryKr,
@@ -99,10 +100,18 @@ export class NewsService implements OnModuleInit {
         imageUrl: a.image ?? undefined,
         url: a.url,
       }));
+      // id dedupe — 같은 id 가 둘 이상이면 첫 번째만 유지 (React duplicate key 방지)
+      const seenIds = new Set<string>();
+      const deduped: FeedArticle[] = [];
+      for (const a of mapped) {
+        if (seenIds.has(a.id)) continue;
+        seenIds.add(a.id);
+        deduped.push(a);
+      }
       // 카테고리 누락 시 fallback 채움
-      const finalArticles: FeedArticle[] = [...mapped];
+      const finalArticles: FeedArticle[] = [...deduped];
       for (let pos = 1; pos <= 7; pos++) {
-        if (!mapped.some((m) => m.feedIndex === pos)) {
+        if (!deduped.some((m) => m.feedIndex === pos)) {
           const fb = MOCK_FALLBACK.find((m) => m.feedIndex === pos);
           if (fb) finalArticles.push(fb);
         }
