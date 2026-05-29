@@ -1,5 +1,12 @@
 import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { YonhapRssClient } from '../../infrastructure/news/yonhap-rss.client';
+
+/** Stable id 생성 — 같은 url 이면 항상 같은 id. RSS refresh 해도 id 일관. */
+function stableArticleId(url: string | undefined, fallback: string): string {
+  if (!url) return fallback;
+  return 'art-' + createHash('sha1').update(url).digest('hex').slice(0, 12);
+}
 
 export interface FeedArticle {
   id: string;
@@ -78,7 +85,7 @@ export class NewsService implements OnModuleInit {
       }
       const now = Date.now();
       const mapped: FeedArticle[] = articles.map((a, idx) => ({
-        id: `art-${a.position}-${idx}`,
+        id: stableArticleId(a.url, `art-${a.position}-${idx}`),
         feedIndex: a.position,
         kind: 'standard',
         eyebrow: a.categoryKr,
