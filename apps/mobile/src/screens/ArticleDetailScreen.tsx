@@ -452,16 +452,25 @@ function msToSec(a: ChatMessage, b: ChatMessage): number {
   return Math.abs(new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()) / 1000;
 }
 
+function formatBubbleTime(iso: string): string {
+  const d = new Date(iso);
+  const ampm = d.getHours() < 12 ? '오전' : '오후';
+  const hr = ((d.getHours() + 11) % 12) + 1;
+  return `${ampm} ${hr}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean }) {
   const me = msg.fromMe;
   const unreadByPeer = me && !msg.readAt;
 
-  // 새 디자인: neutral palette — me=dark surface, peer=light surface (iMessage blue 제거)
+  // 새 디자인: neutral palette — me=dark surface, peer=light surface
   const tail = 20;
   const pinch = 6;
   const bg = me ? '#1d1d1f' : '#f0f0f3';
   const fg = me ? '#ffffff' : '#1d1d1f';
+  const time = formatBubbleTime(msg.sentAt);
 
+  // 시간 표시: me 발신은 버블 왼쪽, peer 발신은 버블 오른쪽 (카톡 식)
   return (
     <View
       style={{
@@ -472,19 +481,16 @@ function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean
         alignItems: 'flex-end',
       }}
     >
-      {unreadByPeer ? (
-        <Text
-          style={{
-            fontSize: 11,
-            color: '#ff9500',
-            fontWeight: '600',
-            marginRight: 4,
-            marginBottom: 0,
-          }}
-        >
-          1
-        </Text>
+      {/* me 의 좌측: 읽음 마커 + 시간 */}
+      {me ? (
+        <View style={{ alignItems: 'flex-end', marginRight: 4, marginBottom: 2 }}>
+          {unreadByPeer ? (
+            <Text style={{ fontSize: 11, color: '#ff9500', fontWeight: '600' }}>1</Text>
+          ) : null}
+          <Text style={{ fontSize: 10, color: '#86868b' }}>{time}</Text>
+        </View>
       ) : null}
+
       <View
         style={{
           backgroundColor: bg,
@@ -509,6 +515,13 @@ function Bubble({ msg, groupedAbove }: { msg: ChatMessage; groupedAbove: boolean
           {msg.body}
         </Text>
       </View>
+
+      {/* peer 의 우측: 시간 */}
+      {!me ? (
+        <Text style={{ fontSize: 10, color: '#86868b', marginLeft: 4, marginBottom: 2 }}>
+          {time}
+        </Text>
+      ) : null}
     </View>
   );
 }
